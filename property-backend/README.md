@@ -17,7 +17,7 @@ https://property-backend-khaki.vercel.app
 Terdapat dua endpoint yang saat ini digunakan:
 
 ```
-GET /api/point/analyze?lat=&lng=
+GET /api/analyze?lat=&lng=
 GET /api/layers/:layerKey?bbox=west,south,east,north
 ```
 
@@ -27,10 +27,10 @@ GET /api/layers/:layerKey?bbox=west,south,east,north
 
 Menganalisis kondisi suatu titik koordinat berdasarkan semua layer spasial yang tersedia.
 
-### `GET /api/point/analyze`
+### `GET /api/analyze`
 
 ```
-GET /api/point/analyze?lat=-8.319946&lng=115.182006
+GET /api/analyze?lat=-8.319946&lng=115.182006
 ```
 
 **Query Parameters:**
@@ -229,7 +229,7 @@ GET /api/layers/flood?bbox=115.1,-8.8,115.3,-8.6
 **Point Analysis:**
 
 ```bash
-curl "https://property-backend-khaki.vercel.app/api/point/analyze?lat=-8.319946&lng=115.182006"
+curl "https://property-backend-khaki.vercel.app/api/analyze?lat=-8.319946&lng=115.182006"
 ```
 
 **Map Layer GeoJSON:**
@@ -241,7 +241,7 @@ curl "https://property-backend-khaki.vercel.app/api/layers/flood?bbox=115.1,-8.8
 ### Menggunakan HTTPie
 
 ```bash
-http GET "https://property-backend-khaki.vercel.app/api/point/analyze" lat==-8.319946 lng==115.182006
+http GET "https://property-backend-khaki.vercel.app/api/analyze" lat==-8.319946 lng==115.182006
 
 http GET "https://property-backend-khaki.vercel.app/api/layers/flood" bbox==115.1,-8.8,115.3,-8.6
 ```
@@ -251,7 +251,7 @@ http GET "https://property-backend-khaki.vercel.app/api/layers/flood" bbox==115.
 ```javascript
 // Point Analysis
 const res = await fetch(
-  "https://property-backend-khaki.vercel.app/api/point/analyze?lat=-8.319946&lng=115.182006"
+  "https://property-backend-khaki.vercel.app/api/analyze?lat=-8.319946&lng=115.182006"
 );
 const data = await res.json();
 console.log(data.overall_risk);
@@ -384,7 +384,7 @@ final class BaliPropertyAPIService {
     func analyzePoint(
         coordinate: CLLocationCoordinate2D
     ) async throws -> PointAnalysisResponse {
-        var components = URLComponents(string: "\(baseURL)/api/point/analyze")!
+        var components = URLComponents(string: "\(baseURL)/api/analyze")!
         components.queryItems = [
             URLQueryItem(name: "lat", value: String(coordinate.latitude)),
             URLQueryItem(name: "lng", value: String(coordinate.longitude))
