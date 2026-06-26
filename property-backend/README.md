@@ -7,7 +7,7 @@ API backend untuk analisis properti berbasis spasial di Bali menggunakan PostGIS
 ## Base URL
 
 ```
-http://localhost:3000
+https://property-backend-khaki.vercel.app
 ```
 
 ---
@@ -36,7 +36,7 @@ GET /api/point/analyze?lat=-8.319946&lng=115.182006
 **Query Parameters:**
 
 | Parameter | Tipe   | Wajib | Keterangan                |
-| --------- | ------ | ----- | ------------------------- |
+|-----------|--------|-------|---------------------------|
 | `lat`     | number | Ya    | Latitude titik koordinat  |
 | `lng`     | number | Ya    | Longitude titik koordinat |
 
@@ -101,12 +101,12 @@ GET /api/point/analyze?lat=-8.319946&lng=115.182006
 
 **Nilai `overall_risk`:**
 
-| Nilai     | Arti                                     |
-| --------- | ---------------------------------------- |
-| `low`     | Semua layer berisiko rendah              |
-| `medium`  | Terdapat satu atau lebih risiko sedang   |
-| `high`    | Terdapat satu atau lebih risiko tinggi   |
-| `unknown` | Data tidak ditemukan dalam radius 5000 m |
+| Nilai     | Arti                                      |
+|-----------|-------------------------------------------|
+| `low`     | Semua layer berisiko rendah               |
+| `medium`  | Terdapat satu atau lebih risiko sedang    |
+| `high`    | Terdapat satu atau lebih risiko tinggi    |
+| `unknown` | Data tidak ditemukan dalam radius 5000 m  |
 
 **Response Error:**
 
@@ -137,28 +137,28 @@ GET /api/layers/flood?bbox=115.1,-8.8,115.3,-8.6
 
 **Path Parameter:**
 
-| Parameter  | Tipe   | Wajib | Keterangan                         |
-| ---------- | ------ | ----- | ---------------------------------- |
+| Parameter  | Tipe   | Wajib | Keterangan          |
+|------------|--------|-------|---------------------|
 | `layerKey` | string | Ya    | Kunci layer (lihat tabel di bawah) |
 
 **Query Parameter:**
 
-| Parameter | Tipe   | Wajib | Contoh                  | Keterangan                            |
-| --------- | ------ | ----- | ----------------------- | ------------------------------------- |
-| `bbox`    | string | Ya    | `115.1,-8.8,115.3,-8.6` | Bounding box: `west,south,east,north` |
+| Parameter | Tipe   | Wajib | Contoh                   | Keterangan                             |
+|-----------|--------|-------|--------------------------|----------------------------------------|
+| `bbox`    | string | Ya    | `115.1,-8.8,115.3,-8.6` | Bounding box: `west,south,east,north`  |
 
 **Layer yang tersedia:**
 
-| `layerKey`          | Tabel Database      | Field Klasifikasi |
-| ------------------- | ------------------- | ----------------- |
-| `flood`             | `flood_zones`       | `area`            |
-| `temperature`       | `temperature_zones` | `suhu`            |
-| `air_quality`       | `air_quality`       | `polusi`          |
-| `green_spaces`      | `green_spaces`      | `rth`             |
-| `population`        | `population_data`   | `jumlah_pen`      |
-| `elevation`         | `elevation_zones`   | `ketinggian`      |
-| `roads_buffer`      | `roads_buffer`      | `remark`          |
-| `public_facilities` | `public_facilities` | `remark`          |
+| `layerKey`          | Tabel Database      | Field Klasifikasi    |
+|---------------------|---------------------|----------------------|
+| `flood`             | `flood_zones`       | `area`               |
+| `temperature`       | `temperature_zones` | `suhu`               |
+| `air_quality`       | `air_quality`       | `polusi`             |
+| `green_spaces`      | `green_spaces`      | `rth`                |
+| `population`        | `population_data`   | `jumlah_pen`         |
+| `elevation`         | `elevation_zones`   | `ketinggian`         |
+| `roads_buffer`      | `roads_buffer`      | `remark`             |
+| `public_facilities` | `public_facilities` | `remark`             |
 
 **Response Sukses `200`:**
 
@@ -209,16 +209,16 @@ GET /api/layers/flood?bbox=115.1,-8.8,115.3,-8.6
 
 ## Skema Warna per Layer
 
-| Layer               | Low / Aman       | Medium            | High / Berisiko |
-| ------------------- | ---------------- | ----------------- | --------------- |
-| `flood`             | Low Flood Risk   | -                 | High Flood Risk |
-| `temperature`       | Cool / Very Cool | Moderate / Hot    | Very Hot        |
-| `air_quality`       | Low (Good)       | Medium (Moderate) | High (Bad)      |
-| `population`        | < 20.000         | 20.000 - 100.000  | > 100.000       |
-| `elevation`         | Highland         | Midland           | Lowland         |
-| `green_spaces`      | Dense            | Moderate / Sparse | -               |
-| `public_facilities` | Semua zona       | -                 | -               |
-| `roads_buffer`      | Semua zona       | -                 | -               |
+| Layer               | Low / Aman       | Medium                | High / Berisiko  |
+|---------------------|------------------|-----------------------|------------------|
+| `flood`             | Low Flood Risk   | -                     | High Flood Risk  |
+| `temperature`       | Cool / Very Cool | Moderate / Hot        | Very Hot         |
+| `air_quality`       | Low (Good)       | Medium (Moderate)     | High (Bad)       |
+| `population`        | < 20.000         | 20.000 - 100.000      | > 100.000        |
+| `elevation`         | Highland         | Midland               | Lowland          |
+| `green_spaces`      | Dense            | Moderate / Sparse     | -                |
+| `public_facilities` | Semua zona       | -                     | -                |
+| `roads_buffer`      | Semua zona       | -                     | -                |
 
 ---
 
@@ -229,21 +229,21 @@ GET /api/layers/flood?bbox=115.1,-8.8,115.3,-8.6
 **Point Analysis:**
 
 ```bash
-curl "http://localhost:3000/api/point/analyze?lat=-8.319946&lng=115.182006"
+curl "https://property-backend-khaki.vercel.app/api/point/analyze?lat=-8.319946&lng=115.182006"
 ```
 
 **Map Layer GeoJSON:**
 
 ```bash
-curl "http://localhost:3000/api/layers/flood?bbox=115.1,-8.8,115.3,-8.6"
+curl "https://property-backend-khaki.vercel.app/api/layers/flood?bbox=115.1,-8.8,115.3,-8.6"
 ```
 
 ### Menggunakan HTTPie
 
 ```bash
-http GET "http://localhost:3000/api/point/analyze" lat==-8.319946 lng==115.182006
+http GET "https://property-backend-khaki.vercel.app/api/point/analyze" lat==-8.319946 lng==115.182006
 
-http GET "http://localhost:3000/api/layers/flood" bbox==115.1,-8.8,115.3,-8.6
+http GET "https://property-backend-khaki.vercel.app/api/layers/flood" bbox==115.1,-8.8,115.3,-8.6
 ```
 
 ### Menggunakan JavaScript (fetch)
@@ -251,14 +251,14 @@ http GET "http://localhost:3000/api/layers/flood" bbox==115.1,-8.8,115.3,-8.6
 ```javascript
 // Point Analysis
 const res = await fetch(
-  "http://localhost:3000/api/point/analyze?lat=-8.319946&lng=115.182006",
+  "https://property-backend-khaki.vercel.app/api/point/analyze?lat=-8.319946&lng=115.182006"
 );
 const data = await res.json();
 console.log(data.overall_risk);
 
 // Map Layer GeoJSON
 const layerRes = await fetch(
-  "http://localhost:3000/api/layers/flood?bbox=115.1,-8.8,115.3,-8.6",
+  "https://property-backend-khaki.vercel.app/api/layers/flood?bbox=115.1,-8.8,115.3,-8.6"
 );
 const layerData = await layerRes.json();
 console.log(layerData.features.length);
@@ -370,7 +370,7 @@ enum APIError: Error, LocalizedError {
 final class BaliPropertyAPIService {
 
     static let shared = BaliPropertyAPIService()
-    private let baseURL = "http://localhost:3000"
+    private let baseURL = "https://property-backend-khaki.vercel.app"
     private let session: URLSession
 
     private init() {
@@ -640,7 +640,7 @@ extension UIColor {
 
 ## Catatan Implementasi
 
-**Jaringan lokal di iOS:** Untuk menghubungkan ke `localhost` dari simulator, gunakan `http://127.0.0.1:3000`. Dari perangkat fisik, gunakan IP lokal mesin pengembang (misalnya `http://192.168.1.x:3000`). Pastikan entri `NSAppTransportSecurity` di `Info.plist` mengizinkan koneksi HTTP non-HTTPS ke host tersebut jika belum menggunakan HTTPS.
+**Jaringan:** Backend sudah berjalan di HTTPS melalui Vercel, sehingga tidak diperlukan konfigurasi `NSAppTransportSecurity` tambahan di `Info.plist`. Aplikasi iOS dapat langsung melakukan request ke `https://property-backend-khaki.vercel.app` tanpa pengecualian ATS.
 
 **Performa overlay:** Untuk data GeoJSON berukuran besar, pertimbangkan menyimpan hasil fetch dalam cache lokal berdasarkan kombinasi `layerKey` dan `bbox` agar tidak melakukan request berulang pada region yang sama.
 
