@@ -9,71 +9,53 @@ const LAYER_CONFIG = {
       "Low Flood Risk": {
         color: "#34C759",
         label: "Low Flood Risk",
-        risk: "low",
       },
       "High Flood Risk": {
         color: "#FF3B30",
         label: "High Flood Risk",
-        risk: "high",
       },
     },
     defaultZone: {
       color: "#8E8E93",
       label: "Unknown",
-      risk: "unknown",
     },
   },
   temperature: {
     field: "suhu",
     zones: {
-      Cool: { color: "#00ff84", label: "Cool", risk: "low" },
-      Moderate: { color: "#FFCC00", label: "Moderate", risk: "medium" },
-      Hot: { color: "#FF9500", label: "Hot", risk: "medium" },
-      "Very Hot": {
-        color: "#FF3B30",
-        label: "Very Hot",
-        risk: "high",
-      },
-      "Very Cool": {
-        color: "#00ff84",
-        label: "Very Cool",
-        risk: "low",
-      },
+      Cool: { color: "#00ff84", label: "Cool" },
+      Moderate: { color: "#FFCC00", label: "Moderate" },
+      Hot: { color: "#FF9500", label: "Hot" },
+      "Very Hot": { color: "#FF3B30", label: "Very Hot" },
+      "Very Cool": { color: "#00ff84", label: "Very Cool" },
     },
     defaultZone: {
       color: "#8E8E93",
       label: "Unknown",
-      risk: "unknown",
     },
   },
   air_quality: {
     field: "polusi",
     zones: {
-      Low: { color: "#34C759", label: "Good", risk: "low" },
-      Medium: {
-        color: "#FF9500",
-        label: "Moderate",
-        risk: "medium",
-      },
-      High: { color: "#FF3B30", label: "Bad", risk: "high" },
+      Low: { color: "#34C759", label: "Good" },
+      Medium: { color: "#FF9500", label: "Moderate" },
+      High: { color: "#FF3B30", label: "Bad" },
     },
     defaultZone: {
       color: "#8E8E93",
       label: "Unknown",
-      risk: "unknown",
     },
   },
   green_spaces: {
     field: "rth",
     zones: {
-      Dense: { color: "#34C759", label: "Dense", risk: "low" },
-      Moderate: { color: "#FFCC00", label: "Moderate", risk: "medium" },
-      Sparse: { color: "#FF9500", label: "Sparse", risk: "medium" },
+      Dense: { color: "#34C759", label: "Dense" },
+      Moderate: { color: "#FFCC00", label: "Moderate" },
+      Sparse: { color: "#FF9500", label: "Sparse" },
     },
     defaultZone: {
       color: "#8E8E93",
       label: "Unknown",
-      risk: "unknown",
     },
   },
   public_facilities: {
@@ -82,7 +64,6 @@ const LAYER_CONFIG = {
     defaultZone: {
       color: "#8E8E93",
       label: "Unknown",
-      risk: "unknown",
     },
   },
   population: {
@@ -91,7 +72,6 @@ const LAYER_CONFIG = {
     defaultZone: {
       color: "#8E8E93",
       label: "Unknown",
-      risk: "unknown",
     },
   },
   elevation: {
@@ -100,7 +80,6 @@ const LAYER_CONFIG = {
     defaultZone: {
       color: "#8E8E93",
       label: "Unknown",
-      risk: "unknown",
     },
   },
   roads_buffer: {
@@ -109,7 +88,6 @@ const LAYER_CONFIG = {
     defaultZone: {
       color: "#8E8E93",
       label: "Unknown",
-      risk: "unknown",
     },
   },
 };
@@ -119,68 +97,20 @@ const LAYER_CONFIG = {
 // -------------------------------------------------------------------
 function categorizePopulation(jumlah) {
   const n = parseFloat(jumlah);
-  if (isNaN(n)) return { color: "#8E8E93", label: "Unknown", risk: "unknown" };
-  if (n < 20000)
-    return {
-      color: "#5AC8FA",
-      label: `Low Density: (${n.toLocaleString()} people)`,
-      risk: "low",
-    };
-  if (n < 50000)
-    return {
-      color: "#FFCC00",
-      label: `Moderate Density: (${n.toLocaleString()} people)`,
-      risk: "medium",
-    };
-  if (n < 100000)
-    return {
-      color: "#FF9500",
-      label: `High Density: (${n.toLocaleString()} people)`,
-      risk: "medium",
-    };
-  return {
-    color: "#FF3B30",
-    label: `Very High Density: (${n.toLocaleString()} people)`,
-    risk: "high",
-  };
+  if (isNaN(n)) return { color: "#8E8E93", label: "Unknown" };
+  return { color: "#5AC8FA", label: String(Math.round(n)) };
 }
 
 function categorizeElevation(ketinggian) {
-  // Jika nilainya string deskriptif, tangani dulu
-  if (typeof ketinggian === "string" && isNaN(parseFloat(ketinggian))) {
-    const map = {
-      Lowland: { color: "#FF9500", label: "Lowland", risk: "high" },
-      Midland: { color: "#34C759", label: "Midland", risk: "low" },
-      Highland: { color: "#5AC8FA", label: "Highland", risk: "low" },
-    };
-    return (
-      map[ketinggian] ?? {
-        color: "#8E8E93",
-        label: ketinggian,
-        risk: "unknown",
-      }
-    );
-  }
-  const n = parseFloat(ketinggian);
-  if (n < 50)
-    return {
-      color: "#FF3B30",
-      label: `Lowland (${n} mdpl)`,
-      risk: "high",
-    };
-  if (n < 200)
-    return {
-      color: "#FF9500",
-      label: `Midland (${n} mdpl)`,
-      risk: "medium",
-    };
-  if (n < 500)
-    return {
-      color: "#34C759",
-      label: `Highland (${n} mdpl)`,
-      risk: "low",
-    };
-  return { color: "#008f05", label: `Pegunungan (${n} mdpl)`, risk: "low" };
+  const map = {
+    Lowland: { color: "#FF9500", label: "Lowland" },
+    Midland: { color: "#34C759", label: "Midland" },
+    Highland: { color: "#5AC8FA", label: "Highland" },
+  };
+
+  return (
+    map[ketinggian] ?? { color: "#8E8E93", label: ketinggian ?? "Unknown" }
+  );
 }
 
 // -------------------------------------------------------------------
@@ -189,7 +119,7 @@ function categorizeElevation(ketinggian) {
 function buildPropertiesSql(layerKey, field) {
   const cfg = LAYER_CONFIG[layerKey];
   if (!cfg) {
-    return `jsonb_build_object('layer', '${layerKey}', 'zone_value', ${field}, 'color', '#8E8E93', 'risk', 'unknown', 'label', COALESCE(${field}::text, 'Unknown'))`;
+    return `jsonb_build_object('layer', '${layerKey}', 'zone_value', ${field}, 'color', '#8E8E93', 'label', COALESCE(${field}::text, 'Unknown'))`;
   }
 
   const zoneEntries = Object.entries(cfg.zones || {});
@@ -199,32 +129,27 @@ function buildPropertiesSql(layerKey, field) {
       'layer', '${layerKey}',
       'zone_value', ${field},
       'color', '${cfg.defaultZone.color}',
-      'label', COALESCE(${field}::text, '${cfg.defaultZone.label}'),
-      'risk', '${cfg.defaultZone.risk}'
+      'label', COALESCE(${field}::text, '${cfg.defaultZone.label}')
     )`;
   }
 
   let colorCase = `CASE ${field}::text `;
   let labelCase = `CASE ${field}::text `;
-  let riskCase = `CASE ${field}::text `;
 
   for (const [zVal, meta] of zoneEntries) {
     const safeVal = zVal.replace(/'/g, "''");
     colorCase += `WHEN '${safeVal}' THEN '${meta.color}' `;
     labelCase += `WHEN '${safeVal}' THEN '${meta.label}' `;
-    riskCase += `WHEN '${safeVal}' THEN '${meta.risk}' `;
   }
 
   colorCase += `ELSE '${cfg.defaultZone.color}' END`;
   labelCase += `ELSE COALESCE(${field}::text, '${cfg.defaultZone.label}') END`;
-  riskCase += `ELSE '${cfg.defaultZone.risk}' END`;
 
   return `jsonb_build_object(
     'layer', '${layerKey}',
     'zone_value', ${field},
     'color', ${colorCase},
-    'label', ${labelCase},
-    'risk', ${riskCase}
+    'label', ${labelCase}
   )`;
 }
 
@@ -236,12 +161,7 @@ function getZoneMeta(layerKey, zoneValue) {
   if (layerKey === "elevation") return categorizeElevation(zoneValue);
 
   const cfg = LAYER_CONFIG[layerKey];
-  if (!cfg)
-    return {
-      color: "#8E8E93",
-      label: zoneValue || "Unknown",
-      risk: "unknown",
-    };
+  if (!cfg) return { color: "#8E8E93", label: zoneValue || "Unknown" };
 
   return (
     cfg.zones[zoneValue] || {
@@ -265,9 +185,8 @@ router.get("/analyze", async (req, res) => {
   const latNum = parseFloat(lat);
   const lngNum = parseFloat(lng);
 
-  if (isNaN(latNum) || isNaN(lngNum)) {
+  if (isNaN(latNum) || isNaN(lngNum))
     return res.status(400).json({ error: "lat dan lng harus berupa angka" });
-  }
 
   try {
     const queriesConfig = [
@@ -311,7 +230,7 @@ router.get("/analyze", async (req, res) => {
         table: "roads_buffer",
         layer: "roads_buffer",
         valCol: "remark",
-        searchType: "intersect",
+        searchType: "radius",
       },
       {
         table: "public_facilities",
@@ -343,6 +262,7 @@ router.get("/analyze", async (req, res) => {
           FROM ${cfg.table} t
           WHERE ST_DWithin(wkb_geometry, ST_SetSRID(ST_Point($1, $2), 4326), ${RADIUS_DEG})
           ORDER BY wkb_geometry <-> ST_SetSRID(ST_Point($1, $2), 4326)
+          LIMIT 5
         `;
       }
 
@@ -355,31 +275,20 @@ router.get("/analyze", async (req, res) => {
       .flat()
       .filter((r) => r !== undefined && r !== null);
 
-    const RISK_WEIGHT = { high: 3, medium: 2, low: 1, unknown: 0 };
-
     const finalData = validResults.map((row) => {
       const meta = getZoneMeta(row.layer, row.zone_value);
       return {
         layer: row.layer,
         distance_meters: Math.round(row.distance_meters),
-        zone_value: row.zone_value,
         label: meta.label,
         color: meta.color,
-        risk: meta.risk,
         attributes: row.data,
       };
     });
 
-    const overallRisk = finalData.reduce((worst, l) => {
-      const worstWeight = RISK_WEIGHT[worst] ?? -1;
-      const currentWeight = RISK_WEIGHT[l.risk] ?? -1;
-      return currentWeight > worstWeight ? l.risk : worst;
-    }, "unknown");
-
     res.json({
       success: true,
       coordinates: { lat: latNum, lng: lngNum },
-      overall_risk: overallRisk,
       data: finalData,
     });
   } catch (err) {
@@ -395,18 +304,17 @@ router.get("/analyze", async (req, res) => {
 router.get("/layers/:layerKey", async (req, res) => {
   const { layerKey } = req.params;
 
-  if (!req.query.bbox) {
-    return res.status(400).json({
-      error:
-        "Parameter ?bbox=minLng,minLat,maxLng,maxLat wajib diisi agar server tidak overload.",
-    });
-  }
+  // if (!req.query.bbox) {
+  //   return res.status(400).json({
+  //     error:
+  //       "Parameter ?bbox=minLng,minLat,maxLng,maxLat wajib diisi agar server tidak overload.",
+  //   });
+  // }
 
   const parts = req.query.bbox.split(",").map(Number);
   if (parts.length !== 4 || parts.some(isNaN)) {
     return res.status(400).json({
-      error:
-        "Format bbox tidak valid. Gunakan angka: minLng,minLat,maxLng,maxLat",
+      error: "Not valid bbox format. Use this : minLng,minLat,maxLng,maxLat",
     });
   }
 
@@ -457,7 +365,7 @@ router.get("/layers/:layerKey", async (req, res) => {
       ...result.rows[0].geojson_data,
     });
   } catch (err) {
-    console.error(`[/point/layers/${layerKey}]`, err);
+    console.error(`[/layers/${layerKey}]`, err);
     res.status(500).json({ error: err.message });
   }
 });

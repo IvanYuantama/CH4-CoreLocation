@@ -36,7 +36,7 @@ GET /api/analyze?lat=-8.319946&lng=115.182006
 **Query Parameters:**
 
 | Parameter | Tipe   | Wajib | Keterangan                |
-|-----------|--------|-------|---------------------------|
+| --------- | ------ | ----- | ------------------------- |
 | `lat`     | number | Ya    | Latitude titik koordinat  |
 | `lng`     | number | Ya    | Longitude titik koordinat |
 
@@ -49,50 +49,192 @@ GET /api/analyze?lat=-8.319946&lng=115.182006
     "lat": -8.319946,
     "lng": 115.182006
   },
-  "overall_risk": "high",
   "data": [
     {
       "layer": "flood",
       "distance_meters": 0,
-      "zone_value": "High Flood Risk",
-      "label": "High Flood Risk",
-      "color": "#FF3B30",
-      "risk": "high",
+      "label": "Low Flood Risk",
+      "color": "#34C759",
       "attributes": {
-        "area": "High Flood Risk"
+        "area": "Low Flood Risk"
       }
     },
     {
       "layer": "temperature",
       "distance_meters": 0,
-      "zone_value": "Hot",
-      "label": "Hot",
-      "color": "#FF9500",
-      "risk": "medium",
+      "label": "Cool",
+      "color": "#00ff84",
       "attributes": {
-        "suhu": "Hot"
+        "suhu": "Cool"
       }
     },
     {
       "layer": "air_quality",
       "distance_meters": 0,
-      "zone_value": "Low",
       "label": "Good",
       "color": "#34C759",
-      "risk": "low",
       "attributes": {
-        "polusi": "Low"
+        "polusi": "Low",
+        "objectid": 1,
+        "shape_area": 0.198562468143,
+        "shape_leng": 5.88620668896
+      }
+    },
+    {
+      "layer": "green_spaces",
+      "distance_meters": 0,
+      "label": "Dense",
+      "color": "#34C759",
+      "attributes": {
+        "id": 12,
+        "rth": "Dense",
+        "gridcode": 3
+      }
+    },
+    {
+      "layer": "population",
+      "distance_meters": 0,
+      "label": "55352",
+      "color": "#5AC8FA",
+      "attributes": {
+        "d3": 469,
+        "s1": 1733,
+        "s2": 106,
+        "s3": 8,
+        "u0": 2567,
+        "u5": 3612,
+        "u10": 3791,
+        "u15": 3905,
+        "u20": 4295,
+        "u25": 4250,
+        "u30": 3623,
+        "u35": 3040,
+        "u40": 3492,
+        "u45": 4086,
+        "u50": 4875,
+        "u55": 3837,
+        "u60": 3084,
+        "u65": 2517,
+        "u70": 1807,
+        "u75": 2571,
+        "guru": 337,
+        "pria": 27818,
+        "slta": 13687,
+        "sltp": 7761,
+        "budha": 195,
+        "hindu": 51255,
+        "islam": 3640,
+        "kawin": 30920,
+        "wanita": 27534,
+        "kristen": 189,
+        "lainnya": 47,
+        "nelayan": 7,
+        "perawat": 30,
+        "katholik": 73,
+        "konghucu": 0,
+        "nama_kab": "KAB. TABANAN",
+        "nama_kec": "BATURITI",
+        "tamat_sd": 14607,
+        "d1_dan_d2": 438,
+        "jumlah_kk": 16798,
+        "pengacara": 2,
+        "pensiunan": 113,
+        "belum_kawi": 21261,
+        "belum_tama": 3519,
+        "belum_tida": 13284,
+        "cerai_hidu": 545,
+        "cerai_mati": 2626,
+        "jumlah_pen": 55352,
+        "kepercayaa": 0,
+        "mengurus_r": 2599,
+        "pelajar_ma": 7711,
+        "perdaganga": 218,
+        "tidak_blm_": 13024,
+        "wiraswasta": 4440
       }
     },
     {
       "layer": "elevation",
       "distance_meters": 0,
-      "zone_value": "Lowland",
-      "label": "Lowland",
-      "color": "#FF9500",
-      "risk": "high",
+      "label": "Highland",
+      "color": "#5AC8FA",
       "attributes": {
-        "ketinggian": "Lowland"
+        "ketinggian": "Highland"
+      }
+    },
+    {
+      "layer": "roads_buffer",
+      "distance_meters": 0,
+      "label": "Collector Road",
+      "color": "#8E8E93",
+      "attributes": {
+        "remark": "Collector Road",
+        "objectid_1": 2,
+        "shape_area": 828143032.733,
+        "shape_leng": 1514632.82135
+      }
+    },
+    {
+      "layer": "roads_buffer",
+      "distance_meters": 0,
+      "label": "Local Road",
+      "color": "#8E8E93",
+      "attributes": {
+        "remark": "Local Road",
+        "objectid_1": 4,
+        "shape_area": 3412837041.65,
+        "shape_leng": 3304247.41702
+      }
+    },
+    {
+      "layer": "roads_buffer",
+      "distance_meters": 49,
+      "label": "Other Road",
+      "color": "#8E8E93",
+      "attributes": {
+        "remark": "Other Road",
+        "objectid_1": 3,
+        "shape_area": 2566938755.68,
+        "shape_leng": 3709190.90309
+      }
+    },
+    {
+      "layer": "roads_buffer",
+      "distance_meters": 1405,
+      "label": "Footpath",
+      "color": "#8E8E93",
+      "attributes": {
+        "remark": "Footpath",
+        "objectid_1": 5,
+        "shape_area": 1728274242.17,
+        "shape_leng": 3243110.57408
+      }
+    },
+    {
+      "layer": "public_facilities",
+      "distance_meters": 0,
+      "label": "Police Station",
+      "color": "#8E8E93",
+      "attributes": {
+        "remark": "Police Station"
+      }
+    },
+    {
+      "layer": "public_facilities",
+      "distance_meters": 310,
+      "label": "School / Education",
+      "color": "#8E8E93",
+      "attributes": {
+        "remark": "School / Education"
+      }
+    },
+    {
+      "layer": "public_facilities",
+      "distance_meters": 4506,
+      "label": "Mosque",
+      "color": "#8E8E93",
+      "attributes": {
+        "remark": "Mosque"
       }
     }
   ]
@@ -101,12 +243,12 @@ GET /api/analyze?lat=-8.319946&lng=115.182006
 
 **Nilai `overall_risk`:**
 
-| Nilai     | Arti                                      |
-|-----------|-------------------------------------------|
-| `low`     | Semua layer berisiko rendah               |
-| `medium`  | Terdapat satu atau lebih risiko sedang    |
-| `high`    | Terdapat satu atau lebih risiko tinggi    |
-| `unknown` | Data tidak ditemukan dalam radius 5000 m  |
+| Nilai     | Arti                                     |
+| --------- | ---------------------------------------- |
+| `low`     | Semua layer berisiko rendah              |
+| `medium`  | Terdapat satu atau lebih risiko sedang   |
+| `high`    | Terdapat satu atau lebih risiko tinggi   |
+| `unknown` | Data tidak ditemukan dalam radius 5000 m |
 
 **Response Error:**
 
@@ -137,28 +279,28 @@ GET /api/layers/flood?bbox=115.1,-8.8,115.3,-8.6
 
 **Path Parameter:**
 
-| Parameter  | Tipe   | Wajib | Keterangan          |
-|------------|--------|-------|---------------------|
+| Parameter  | Tipe   | Wajib | Keterangan                         |
+| ---------- | ------ | ----- | ---------------------------------- |
 | `layerKey` | string | Ya    | Kunci layer (lihat tabel di bawah) |
 
 **Query Parameter:**
 
-| Parameter | Tipe   | Wajib | Contoh                   | Keterangan                             |
-|-----------|--------|-------|--------------------------|----------------------------------------|
-| `bbox`    | string | Ya    | `115.1,-8.8,115.3,-8.6` | Bounding box: `west,south,east,north`  |
+| Parameter | Tipe   | Wajib | Contoh                  | Keterangan                            |
+| --------- | ------ | ----- | ----------------------- | ------------------------------------- |
+| `bbox`    | string | Ya    | `115.1,-8.8,115.3,-8.6` | Bounding box: `west,south,east,north` |
 
 **Layer yang tersedia:**
 
-| `layerKey`          | Tabel Database      | Field Klasifikasi    |
-|---------------------|---------------------|----------------------|
-| `flood`             | `flood_zones`       | `area`               |
-| `temperature`       | `temperature_zones` | `suhu`               |
-| `air_quality`       | `air_quality`       | `polusi`             |
-| `green_spaces`      | `green_spaces`      | `rth`                |
-| `population`        | `population_data`   | `jumlah_pen`         |
-| `elevation`         | `elevation_zones`   | `ketinggian`         |
-| `roads_buffer`      | `roads_buffer`      | `remark`             |
-| `public_facilities` | `public_facilities` | `remark`             |
+| `layerKey`          | Tabel Database      | Field Klasifikasi |
+| ------------------- | ------------------- | ----------------- |
+| `flood`             | `flood_zones`       | `area`            |
+| `temperature`       | `temperature_zones` | `suhu`            |
+| `air_quality`       | `air_quality`       | `polusi`          |
+| `green_spaces`      | `green_spaces`      | `rth`             |
+| `population`        | `population_data`   | `jumlah_pen`      |
+| `elevation`         | `elevation_zones`   | `ketinggian`      |
+| `roads_buffer`      | `roads_buffer`      | `remark`          |
+| `public_facilities` | `public_facilities` | `remark`          |
 
 **Response Sukses `200`:**
 
@@ -209,16 +351,16 @@ GET /api/layers/flood?bbox=115.1,-8.8,115.3,-8.6
 
 ## Skema Warna per Layer
 
-| Layer               | Low / Aman       | Medium                | High / Berisiko  |
-|---------------------|------------------|-----------------------|------------------|
-| `flood`             | Low Flood Risk   | -                     | High Flood Risk  |
-| `temperature`       | Cool / Very Cool | Moderate / Hot        | Very Hot         |
-| `air_quality`       | Low (Good)       | Medium (Moderate)     | High (Bad)       |
-| `population`        | < 20.000         | 20.000 - 100.000      | > 100.000        |
-| `elevation`         | Highland         | Midland               | Lowland          |
-| `green_spaces`      | Dense            | Moderate / Sparse     | -                |
-| `public_facilities` | Semua zona       | -                     | -                |
-| `roads_buffer`      | Semua zona       | -                     | -                |
+| Layer               | Low / Aman       | Medium            | High / Berisiko |
+| ------------------- | ---------------- | ----------------- | --------------- |
+| `flood`             | Low Flood Risk   | -                 | High Flood Risk |
+| `temperature`       | Cool / Very Cool | Moderate / Hot    | Very Hot        |
+| `air_quality`       | Low (Good)       | Medium (Moderate) | High (Bad)      |
+| `population`        | < 20.000         | 20.000 - 100.000  | > 100.000       |
+| `elevation`         | Highland         | Midland           | Lowland         |
+| `green_spaces`      | Dense            | Moderate / Sparse | -               |
+| `public_facilities` | Semua zona       | -                 | -               |
+| `roads_buffer`      | Semua zona       | -                 | -               |
 
 ---
 
@@ -251,14 +393,14 @@ http GET "https://property-backend-khaki.vercel.app/api/layers/flood" bbox==115.
 ```javascript
 // Point Analysis
 const res = await fetch(
-  "https://property-backend-khaki.vercel.app/api/analyze?lat=-8.319946&lng=115.182006"
+  "https://property-backend-khaki.vercel.app/api/analyze?lat=-8.319946&lng=115.182006",
 );
 const data = await res.json();
 console.log(data.overall_risk);
 
 // Map Layer GeoJSON
 const layerRes = await fetch(
-  "https://property-backend-khaki.vercel.app/api/layers/flood?bbox=115.1,-8.8,115.3,-8.6"
+  "https://property-backend-khaki.vercel.app/api/layers/flood?bbox=115.1,-8.8,115.3,-8.6",
 );
 const layerData = await layerRes.json();
 console.log(layerData.features.length);
