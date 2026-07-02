@@ -1,789 +1,528 @@
-# Bali Property Map - Backend API
+# Backend Documentation
 
-API backend untuk analisis properti berbasis spasial di Bali menggunakan PostGIS dan Express.js.
-
----
-
-## Base URL
-
-```
-https://property-backend-khaki.vercel.app
-```
+Complete data structure documentation per layer from the `/api/analyze` endpoint.
 
 ---
 
-## Endpoints Aktif
-
-Terdapat dua endpoint yang saat ini digunakan:
+## Response Structure
 
 ```
-GET /api/analyze?lat=&lng=
-GET /api/layers/:layerKey?bbox=west,south,east,north
-```
-
----
-
-## 1. Point Analysis
-
-Menganalisis kondisi suatu titik koordinat berdasarkan semua layer spasial yang tersedia.
-
-### `GET /api/analyze`
-
-```
-GET /api/analyze?lat=-8.319946&lng=115.182006
-```
-
-**Query Parameters:**
-
-| Parameter | Tipe   | Wajib | Keterangan                |
-| --------- | ------ | ----- | ------------------------- |
-| `lat`     | number | Ya    | Latitude titik koordinat  |
-| `lng`     | number | Ya    | Longitude titik koordinat |
-
-**Response Sukses `200`:**
-
-```json
 {
-  "success": true,
-  "coordinates": {
-    "lat": -8.319946,
-    "lng": 115.182006
-  },
-  "data": [
-    {
-      "layer": "flood",
-      "distance_meters": 0,
-      "label": "Low Flood Risk",
-      "color": "#34C759",
-      "attributes": {
-        "area": "Low Flood Risk"
-      }
-    },
-    {
-      "layer": "temperature",
-      "distance_meters": 0,
-      "label": "Cool",
-      "color": "#00ff84",
-      "attributes": {
-        "suhu": "Cool"
-      }
-    },
-    {
-      "layer": "air_quality",
-      "distance_meters": 0,
-      "label": "Good",
-      "color": "#34C759",
-      "attributes": {
-        "polusi": "Low",
-        "objectid": 1,
-        "shape_area": 0.198562468143,
-        "shape_leng": 5.88620668896
-      }
-    },
-    {
-      "layer": "green_spaces",
-      "distance_meters": 0,
-      "label": "Dense",
-      "color": "#34C759",
-      "attributes": {
-        "id": 12,
-        "rth": "Dense",
-        "gridcode": 3
-      }
-    },
-    {
-      "layer": "population",
-      "distance_meters": 0,
-      "label": "55352",
-      "color": "#5AC8FA",
-      "attributes": {
-        "d3": 469,
-        "s1": 1733,
-        "s2": 106,
-        "s3": 8,
-        "u0": 2567,
-        "u5": 3612,
-        "u10": 3791,
-        "u15": 3905,
-        "u20": 4295,
-        "u25": 4250,
-        "u30": 3623,
-        "u35": 3040,
-        "u40": 3492,
-        "u45": 4086,
-        "u50": 4875,
-        "u55": 3837,
-        "u60": 3084,
-        "u65": 2517,
-        "u70": 1807,
-        "u75": 2571,
-        "guru": 337,
-        "pria": 27818,
-        "slta": 13687,
-        "sltp": 7761,
-        "budha": 195,
-        "hindu": 51255,
-        "islam": 3640,
-        "kawin": 30920,
-        "wanita": 27534,
-        "kristen": 189,
-        "lainnya": 47,
-        "nelayan": 7,
-        "perawat": 30,
-        "katholik": 73,
-        "konghucu": 0,
-        "nama_kab": "KAB. TABANAN",
-        "nama_kec": "BATURITI",
-        "tamat_sd": 14607,
-        "d1_dan_d2": 438,
-        "jumlah_kk": 16798,
-        "pengacara": 2,
-        "pensiunan": 113,
-        "belum_kawi": 21261,
-        "belum_tama": 3519,
-        "belum_tida": 13284,
-        "cerai_hidu": 545,
-        "cerai_mati": 2626,
-        "jumlah_pen": 55352,
-        "kepercayaa": 0,
-        "mengurus_r": 2599,
-        "pelajar_ma": 7711,
-        "perdaganga": 218,
-        "tidak_blm_": 13024,
-        "wiraswasta": 4440
-      }
-    },
-    {
-      "layer": "elevation",
-      "distance_meters": 0,
-      "label": "Highland",
-      "color": "#5AC8FA",
-      "attributes": {
-        "ketinggian": "Highland"
-      }
-    },
-    {
-      "layer": "roads_buffer",
-      "distance_meters": 0,
-      "label": "Collector Road",
-      "color": "#8E8E93",
-      "attributes": {
-        "remark": "Collector Road",
-        "objectid_1": 2,
-        "shape_area": 828143032.733,
-        "shape_leng": 1514632.82135
-      }
-    },
-    {
-      "layer": "roads_buffer",
-      "distance_meters": 0,
-      "label": "Local Road",
-      "color": "#8E8E93",
-      "attributes": {
-        "remark": "Local Road",
-        "objectid_1": 4,
-        "shape_area": 3412837041.65,
-        "shape_leng": 3304247.41702
-      }
-    },
-    {
-      "layer": "roads_buffer",
-      "distance_meters": 49,
-      "label": "Other Road",
-      "color": "#8E8E93",
-      "attributes": {
-        "remark": "Other Road",
-        "objectid_1": 3,
-        "shape_area": 2566938755.68,
-        "shape_leng": 3709190.90309
-      }
-    },
-    {
-      "layer": "roads_buffer",
-      "distance_meters": 1405,
-      "label": "Footpath",
-      "color": "#8E8E93",
-      "attributes": {
-        "remark": "Footpath",
-        "objectid_1": 5,
-        "shape_area": 1728274242.17,
-        "shape_leng": 3243110.57408
-      }
-    },
-    {
-      "layer": "public_facilities",
-      "distance_meters": 0,
-      "label": "Police Station",
-      "color": "#8E8E93",
-      "attributes": {
-        "remark": "Police Station"
-      }
-    },
-    {
-      "layer": "public_facilities",
-      "distance_meters": 310,
-      "label": "School / Education",
-      "color": "#8E8E93",
-      "attributes": {
-        "remark": "School / Education"
-      }
-    },
-    {
-      "layer": "public_facilities",
-      "distance_meters": 4506,
-      "label": "Mosque",
-      "color": "#8E8E93",
-      "attributes": {
-        "remark": "Mosque"
-      }
-    }
-  ]
+  success:     Bool
+  coordinates: { lat: Double, lng: Double }
+  data:        [LayerResult]
 }
 ```
 
-**Nilai `overall_risk`:**
+### LayerResult (each item in `data`)
 
-| Nilai     | Arti                                     |
-| --------- | ---------------------------------------- |
-| `low`     | Semua layer berisiko rendah              |
-| `medium`  | Terdapat satu atau lebih risiko sedang   |
-| `high`    | Terdapat satu atau lebih risiko tinggi   |
-| `unknown` | Data tidak ditemukan dalam radius 5000 m |
-
-**Response Error:**
-
-```json
-// 400 - Parameter tidak lengkap
-{ "error": "lat dan lng wajib diisi" }
-
-// 400 - Nilai bukan angka
-{ "error": "lat dan lng harus berupa angka" }
-
-// 500 - Error database
-{ "error": "pesan error dari database" }
-```
+| Field             | Tipe   | Keterangan                                                                |
+| ----------------- | ------ | ------------------------------------------------------------------------- |
+| `layer`           | String | Layer name                                                                |
+| `distance_meters` | Int    | Distance from coordinate point to zone. `0` = point is inside the zone    |
+| `label`           | String | Human-readable label from classification                                  |
+| `color`           | String | Hex color for UI (`#RRGGBB`)                                              |
+| `attributes`      | Object | Raw data from database (differs per layer)                                |
+| `total`           | Int    | Number of facilities in the category. Only present in `public_facilities` |
 
 ---
 
-## 2. Map Layer GeoJSON
+## Data Retrieval Guide per Layer (Frontend)
 
-Mengambil data polygon GeoJSON satu layer untuk ditampilkan sebagai overlay peta.
+Quick reference for which fields are relevant to display in the UI.
 
-### `GET /api/layers/:layerKey`
+| Layer               | Take From                                  | Notes                     |
+| ------------------- | ------------------------------------------ | ------------------------- |
+| `flood`             | `attributes.area`                          |                           |
+| `temperature`       | `attributes.suhu`                          |                           |
+| `air_quality`       | `label`                                    |                           |
+| `green_spaces`      | `label`                                    |                           |
+| `population`        | `attributes.jumlah_pen`                    |                           |
+| `elevation`         | `label`                                    |                           |
+| `roads_buffer`      | `distance_meters`, `label`                 | Can appear multiple times |
+| `public_facilities` | `distance_meters`, `label`, `total`        | Can appear multiple times |
+| `wifi`              | `attributes.dl_mbps`, `attributes.ul_mbps` |                           |
+| `mobile_data`       | `attributes.dl_mbps`, `attributes.ul_mbps` |                           |
+| `crime`             | `attributes.crime_total`                   |                           |
 
-Parameter `bbox` wajib disertakan untuk mencegah overload server.
+---
 
-```
-GET /api/layers/flood?bbox=115.1,-8.8,115.3,-8.6
-```
+## Layer: `flood`
 
-**Path Parameter:**
+**Classification field:** `area` (String)
 
-| Parameter  | Tipe   | Wajib | Keterangan                         |
-| ---------- | ------ | ----- | ---------------------------------- |
-| `layerKey` | string | Ya    | Kunci layer (lihat tabel di bawah) |
+| Zone Value        | Label           | Color     |
+| ----------------- | --------------- | --------- |
+| `Low Flood Risk`  | Low Flood Risk  | `#34C759` |
+| `High Flood Risk` | High Flood Risk | `#FF3B30` |
+| _(other)_         | Unknown         | `#8E8E93` |
 
-**Query Parameter:**
+**Attributes:**
 
-| Parameter | Tipe   | Wajib | Contoh                  | Keterangan                            |
-| --------- | ------ | ----- | ----------------------- | ------------------------------------- |
-| `bbox`    | string | Ya    | `115.1,-8.8,115.3,-8.6` | Bounding box: `west,south,east,north` |
+| Field  | Tipe   | Keterangan          |
+| ------ | ------ | ------------------- |
+| `area` | String | Zone classification |
 
-**Layer yang tersedia:**
-
-| `layerKey`          | Tabel Database      | Field Klasifikasi |
-| ------------------- | ------------------- | ----------------- |
-| `flood`             | `flood_zones`       | `area`            |
-| `temperature`       | `temperature_zones` | `suhu`            |
-| `air_quality`       | `air_quality`       | `polusi`          |
-| `green_spaces`      | `green_spaces`      | `rth`             |
-| `population`        | `population_data`   | `jumlah_pen`      |
-| `elevation`         | `elevation_zones`   | `ketinggian`      |
-| `roads_buffer`      | `roads_buffer`      | `remark`          |
-| `public_facilities` | `public_facilities` | `remark`          |
-
-**Response Sukses `200`:**
+**Example:**
 
 ```json
 {
-  "success": true,
   "layer": "flood",
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "MultiPolygon",
-        "coordinates": ["..."]
-      },
-      "properties": {
-        "layer": "flood",
-        "zone_value": "High Flood Risk",
-        "label": "High Flood Risk",
-        "color": "#FF3B30",
-        "risk": "high"
-      }
-    }
-  ]
+  "distance_meters": 0,
+  "label": "Low Flood Risk",
+  "color": "#34C759",
+  "attributes": {
+    "area": "Low Flood Risk"
+  }
 }
 ```
 
-**Response Error:**
+---
+
+## Layer: `temperature`
+
+**Classification field:** `suhu` (String)
+
+| Zone Value  | Label     | Color     |
+| ----------- | --------- | --------- |
+| `Very Cool` | Very Cool | `#00ff84` |
+| `Cool`      | Cool      | `#00ff84` |
+| `Moderate`  | Moderate  | `#FFCC00` |
+| `Hot`       | Hot       | `#FF9500` |
+| `Very Hot`  | Very Hot  | `#FF3B30` |
+| _(other)_   | Unknown   | `#8E8E93` |
+
+**Attributes:**
+
+| Field  | Tipe   | Keterangan                 |
+| ------ | ------ | -------------------------- |
+| `suhu` | String | Temperature classification |
+
+**Example:**
 
 ```json
-// 400 - bbox tidak disertakan
-{ "error": "Parameter ?bbox=minLng,minLat,maxLng,maxLat wajib diisi agar server tidak overload." }
-
-// 400 - Format bbox tidak valid
-{ "error": "Format bbox tidak valid. Gunakan angka: minLng,minLat,maxLng,maxLat" }
-
-// 404 - layerKey tidak dikenali
 {
-  "error": "Layer 'xyz' tidak ditemukan.",
-  "available": ["flood","temperature","air_quality","green_spaces","public_facilities","population","elevation","roads_buffer"]
-}
-
-// 500 - Error database
-{ "error": "pesan error dari database" }
-```
-
----
-
-## Skema Warna per Layer
-
-| Layer               | Low / Aman       | Medium            | High / Berisiko |
-| ------------------- | ---------------- | ----------------- | --------------- |
-| `flood`             | Low Flood Risk   | -                 | High Flood Risk |
-| `temperature`       | Cool / Very Cool | Moderate / Hot    | Very Hot        |
-| `air_quality`       | Low (Good)       | Medium (Moderate) | High (Bad)      |
-| `population`        | < 20.000         | 20.000 - 100.000  | > 100.000       |
-| `elevation`         | Highland         | Midland           | Lowland         |
-| `green_spaces`      | Dense            | Moderate / Sparse | -               |
-| `public_facilities` | Semua zona       | -                 | -               |
-| `roads_buffer`      | Semua zona       | -                 | -               |
-
----
-
-## Contoh Pengujian
-
-### Menggunakan curl
-
-**Point Analysis:**
-
-```bash
-curl "https://property-backend-khaki.vercel.app/api/analyze?lat=-8.319946&lng=115.182006"
-```
-
-**Map Layer GeoJSON:**
-
-```bash
-curl "https://property-backend-khaki.vercel.app/api/layers/flood?bbox=115.1,-8.8,115.3,-8.6"
-```
-
-### Menggunakan HTTPie
-
-```bash
-http GET "https://property-backend-khaki.vercel.app/api/analyze" lat==-8.319946 lng==115.182006
-
-http GET "https://property-backend-khaki.vercel.app/api/layers/flood" bbox==115.1,-8.8,115.3,-8.6
-```
-
-### Menggunakan JavaScript (fetch)
-
-```javascript
-// Point Analysis
-const res = await fetch(
-  "https://property-backend-khaki.vercel.app/api/analyze?lat=-8.319946&lng=115.182006",
-);
-const data = await res.json();
-console.log(data.overall_risk);
-
-// Map Layer GeoJSON
-const layerRes = await fetch(
-  "https://property-backend-khaki.vercel.app/api/layers/flood?bbox=115.1,-8.8,115.3,-8.6",
-);
-const layerData = await layerRes.json();
-console.log(layerData.features.length);
-```
-
----
-
-## Implementasi di Swift (MapKit)
-
-Berikut adalah panduan lengkap untuk mengintegrasikan kedua endpoint ke dalam aplikasi iOS menggunakan MapKit.
-
-### 1. Model Data
-
-Definisikan struktur data yang sesuai dengan response API.
-
-```swift
-// MARK: - Point Analysis
-
-struct PointAnalysisResponse: Decodable {
-    let success: Bool
-    let coordinates: Coordinates
-    let overallRisk: String
-    let data: [LayerResult]
-
-    enum CodingKeys: String, CodingKey {
-        case success, coordinates, data
-        case overallRisk = "overall_risk"
-    }
-}
-
-struct Coordinates: Decodable {
-    let lat: Double
-    let lng: Double
-}
-
-struct LayerResult: Decodable {
-    let layer: String
-    let distanceMeters: Int
-    let zoneValue: String
-    let label: String
-    let color: String
-    let risk: String
-
-    enum CodingKeys: String, CodingKey {
-        case layer, label, color, risk
-        case distanceMeters = "distance_meters"
-        case zoneValue = "zone_value"
-    }
-}
-
-// MARK: - GeoJSON Layer
-
-struct GeoJSONResponse: Decodable {
-    let success: Bool
-    let layer: String
-    let type: String
-    let features: [GeoJSONFeature]
-}
-
-struct GeoJSONFeature: Decodable {
-    let type: String
-    let geometry: GeoJSONGeometry
-    let properties: FeatureProperties
-}
-
-struct GeoJSONGeometry: Decodable {
-    let type: String
-    let coordinates: AnyCodable  // Gunakan AnyCodable atau decode manual
-}
-
-struct FeatureProperties: Decodable {
-    let layer: String
-    let zoneValue: String
-    let label: String
-    let color: String
-    let risk: String
-
-    enum CodingKeys: String, CodingKey {
-        case layer, label, color, risk
-        case zoneValue = "zone_value"
-    }
-}
-```
-
-### 2. API Service
-
-Buat service terpisah untuk menangani semua request ke backend.
-
-```swift
-import Foundation
-import CoreLocation
-
-enum APIError: Error, LocalizedError {
-    case invalidURL
-    case invalidResponse
-    case decodingFailed(Error)
-    case serverError(String)
-
-    var errorDescription: String? {
-        switch self {
-        case .invalidURL:        return "URL tidak valid."
-        case .invalidResponse:   return "Response dari server tidak valid."
-        case .decodingFailed(let e): return "Gagal decode data: \(e.localizedDescription)"
-        case .serverError(let msg):  return "Server error: \(msg)"
-        }
-    }
-}
-
-final class BaliPropertyAPIService {
-
-    static let shared = BaliPropertyAPIService()
-    private let baseURL = "https://property-backend-khaki.vercel.app"
-    private let session: URLSession
-
-    private init() {
-        let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 15
-        self.session = URLSession(configuration: config)
-    }
-
-    // MARK: - Point Analysis
-
-    func analyzePoint(
-        coordinate: CLLocationCoordinate2D
-    ) async throws -> PointAnalysisResponse {
-        var components = URLComponents(string: "\(baseURL)/api/analyze")!
-        components.queryItems = [
-            URLQueryItem(name: "lat", value: String(coordinate.latitude)),
-            URLQueryItem(name: "lng", value: String(coordinate.longitude))
-        ]
-
-        guard let url = components.url else { throw APIError.invalidURL }
-
-        let (data, response) = try await session.data(from: url)
-
-        guard let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 200 else {
-            throw APIError.invalidResponse
-        }
-
-        do {
-            let decoder = JSONDecoder()
-            return try decoder.decode(PointAnalysisResponse.self, from: data)
-        } catch {
-            throw APIError.decodingFailed(error)
-        }
-    }
-
-    // MARK: - Map Layer GeoJSON
-
-    func fetchLayer(
-        layerKey: String,
-        bbox: MKCoordinateRegion
-    ) async throws -> Data {
-        let west  = bbox.center.longitude - bbox.span.longitudeDelta / 2
-        let east  = bbox.center.longitude + bbox.span.longitudeDelta / 2
-        let south = bbox.center.latitude  - bbox.span.latitudeDelta  / 2
-        let north = bbox.center.latitude  + bbox.span.latitudeDelta  / 2
-
-        var components = URLComponents(string: "\(baseURL)/api/layers/\(layerKey)")!
-        components.queryItems = [
-            URLQueryItem(name: "bbox", value: "\(west),\(south),\(east),\(north)")
-        ]
-
-        guard let url = components.url else { throw APIError.invalidURL }
-
-        let (data, response) = try await session.data(from: url)
-
-        guard let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 200 else {
-            throw APIError.invalidResponse
-        }
-
-        return data
-    }
-}
-```
-
-### 3. Menampilkan Overlay Polygon di MapKit
-
-MapKit mendukung GeoJSON secara native melalui `MKGeoJSONDecoder`. Gunakan ini untuk mengonversi response layer menjadi overlay peta.
-
-```swift
-import MapKit
-
-final class MapLayerManager {
-
-    // Tambahkan overlay GeoJSON ke MKMapView
-    func addGeoJSONOverlay(
-        data: Data,
-        to mapView: MKMapView,
-        layerKey: String
-    ) {
-        let decoder = MKGeoJSONDecoder()
-
-        guard let features = try? decoder.decode(data) else {
-            print("Gagal decode GeoJSON untuk layer: \(layerKey)")
-            return
-        }
-
-        for feature in features {
-            guard let geoFeature = feature as? MKGeoJSONFeature else { continue }
-
-            // Ambil properties untuk warna polygon
-            var fillColor = UIColor.systemGray
-            if let propsData = geoFeature.properties,
-               let props = try? JSONDecoder().decode(FeatureProperties.self, from: propsData) {
-                fillColor = UIColor(hex: props.color) ?? .systemGray
-            }
-
-            for geometry in geoFeature.geometry {
-                switch geometry {
-                case let polygon as MKPolygon:
-                    mapView.addOverlay(polygon)
-                    // Simpan warna ke dictionary untuk diakses di renderer
-                    overlayColorMap[polygon] = fillColor
-
-                case let multiPolygon as MKMultiPolygon:
-                    mapView.addOverlay(multiPolygon)
-                    overlayColorMap[multiPolygon] = fillColor
-
-                default:
-                    break
-                }
-            }
-        }
-    }
-
-    // Dictionary untuk menyimpan warna per overlay
-    private var overlayColorMap: [AnyHashable: UIColor] = [:]
-
-    func color(for overlay: MKOverlay) -> UIColor {
-        return overlayColorMap[AnyHashable(overlay as AnyObject)] ?? UIColor.systemGray.withAlphaComponent(0.4)
-    }
-}
-```
-
-### 4. Renderer Overlay
-
-Implementasikan `MKMapViewDelegate` untuk merender warna polygon sesuai data dari API.
-
-```swift
-extension YourViewController: MKMapViewDelegate {
-
-    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-        let fillColor = layerManager.color(for: overlay)
-
-        if let polygon = overlay as? MKPolygon {
-            let renderer = MKPolygonRenderer(polygon: polygon)
-            renderer.fillColor   = fillColor.withAlphaComponent(0.4)
-            renderer.strokeColor = fillColor
-            renderer.lineWidth   = 1.0
-            return renderer
-        }
-
-        if let multiPolygon = overlay as? MKMultiPolygon {
-            let renderer = MKMultiPolygonRenderer(multiPolygon: multiPolygon)
-            renderer.fillColor   = fillColor.withAlphaComponent(0.4)
-            renderer.strokeColor = fillColor
-            renderer.lineWidth   = 1.0
-            return renderer
-        }
-
-        return MKOverlayRenderer(overlay: overlay)
-    }
-}
-```
-
-### 5. Analisis Titik Koordinat
-
-Tampilkan detail risiko ketika pengguna mengetuk lokasi di peta.
-
-```swift
-extension YourViewController: MKMapViewDelegate {
-
-    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        guard let coordinate = view.annotation?.coordinate else { return }
-
-        Task {
-            do {
-                let result = try await BaliPropertyAPIService.shared.analyzePoint(
-                    coordinate: coordinate
-                )
-                await MainActor.run {
-                    showRiskBottomSheet(result: result)
-                }
-            } catch {
-                await MainActor.run {
-                    showErrorAlert(message: error.localizedDescription)
-                }
-            }
-        }
-    }
-
-    private func showRiskBottomSheet(result: PointAnalysisResponse) {
-        // Tampilkan sheet berisi overall_risk dan detail per layer
-        let overallRisk = result.overallRisk  // "low", "medium", "high", "unknown"
-        let layers = result.data
-
-        // Contoh: warna badge risiko keseluruhan
-        let badgeColor: UIColor
-        switch overallRisk {
-        case "high":    badgeColor = UIColor(hex: "#FF3B30")!
-        case "medium":  badgeColor = UIColor(hex: "#FF9500")!
-        case "low":     badgeColor = UIColor(hex: "#34C759")!
-        default:        badgeColor = UIColor(hex: "#8E8E93")!
-        }
-
-        // Lanjutkan ke UI layer Anda
-        _ = badgeColor
-        _ = layers
-    }
-}
-```
-
-### 6. Memuat Layer saat Region Berubah
-
-Muat ulang data layer secara otomatis ketika pengguna menggeser atau memperbesar peta.
-
-```swift
-extension YourViewController: MKMapViewDelegate {
-
-    func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-        let currentRegion = mapView.region
-
-        // Hindari request terlalu sering dengan debounce
-        layerLoadTask?.cancel()
-        layerLoadTask = Task {
-            try? await Task.sleep(nanoseconds: 500_000_000)  // 0.5 detik
-            guard !Task.isCancelled else { return }
-            await loadFloodLayer(for: currentRegion)
-        }
-    }
-
-    private var layerLoadTask: Task<Void, Never>?
-
-    func loadFloodLayer(for region: MKCoordinateRegion) async {
-        do {
-            let data = try await BaliPropertyAPIService.shared.fetchLayer(
-                layerKey: "flood",
-                bbox: region
-            )
-            await MainActor.run {
-                // Hapus overlay lama sebelum menambah yang baru
-                let existingOverlays = mapView.overlays
-                mapView.removeOverlays(existingOverlays)
-
-                layerManager.addGeoJSONOverlay(data: data, to: mapView, layerKey: "flood")
-            }
-        } catch {
-            print("Gagal memuat layer flood: \(error.localizedDescription)")
-        }
-    }
-}
-```
-
-### 7. Helper: UIColor dari Hex String
-
-```swift
-extension UIColor {
-    convenience init?(hex: String) {
-        var hexStr = hex.trimmingCharacters(in: .whitespacesAndNewlines)
-        if hexStr.hasPrefix("#") { hexStr.removeFirst() }
-
-        guard hexStr.count == 6,
-              let value = UInt64(hexStr, radix: 16) else { return nil }
-
-        self.init(
-            red:   CGFloat((value & 0xFF0000) >> 16) / 255,
-            green: CGFloat((value & 0x00FF00) >> 8)  / 255,
-            blue:  CGFloat( value & 0x0000FF)         / 255,
-            alpha: 1.0
-        )
-    }
+  "layer": "temperature",
+  "distance_meters": 0,
+  "label": "Cool",
+  "color": "#00ff84",
+  "attributes": {
+    "suhu": "Cool"
+  }
 }
 ```
 
 ---
 
-## Catatan Implementasi
+## Layer: `air_quality`
 
-**Jaringan:** Backend sudah berjalan di HTTPS melalui Vercel, sehingga tidak diperlukan konfigurasi `NSAppTransportSecurity` tambahan di `Info.plist`. Aplikasi iOS dapat langsung melakukan request ke `https://property-backend-khaki.vercel.app` tanpa pengecualian ATS.
+**Classification field:** `polusi` (String)
 
-**Performa overlay:** Untuk data GeoJSON berukuran besar, pertimbangkan menyimpan hasil fetch dalam cache lokal berdasarkan kombinasi `layerKey` dan `bbox` agar tidak melakukan request berulang pada region yang sama.
+| Zone Value | Label    | Color     |
+| ---------- | -------- | --------- |
+| `Low`      | Good     | `#34C759` |
+| `Medium`   | Moderate | `#FF9500` |
+| `High`     | Bad      | `#FF3B30` |
+| _(other)_  | Unknown  | `#8E8E93` |
 
-**Konkruensi:** Semua pembaruan UI (`addOverlay`, `removeOverlays`) harus dijalankan di `MainActor`. Seluruh contoh kode di atas sudah memenuhi hal ini.
+**Attributes:**
+
+| Field        | Tipe   | Keterangan               |
+| ------------ | ------ | ------------------------ |
+| `polusi`     | String | Pollution classification |
+| `objectid`   | Int    | Object ID in database    |
+| `shape_area` | Double | Area size (degrees²)     |
+| `shape_leng` | Double | Perimeter length         |
+
+**Example:**
+
+```json
+{
+  "layer": "air_quality",
+  "distance_meters": 0,
+  "label": "Good",
+  "color": "#34C759",
+  "attributes": {
+    "polusi": "Low",
+    "objectid": 1,
+    "shape_area": 0.198562468143,
+    "shape_leng": 5.88620668896
+  }
+}
+```
+
+---
+
+## Layer: `green_spaces`
+
+**Classification field:** `rth` (String)
+
+| Zone Value | Label    | Color     |
+| ---------- | -------- | --------- |
+| `Dense`    | Dense    | `#34C759` |
+| `Moderate` | Moderate | `#FFCC00` |
+| `Sparse`   | Sparse   | `#FF9500` |
+| _(other)_  | Unknown  | `#8E8E93` |
+
+**Attributes:**
+
+| Field      | Tipe   | Keterangan                 |
+| ---------- | ------ | -------------------------- |
+| `rth`      | String | Green space classification |
+| `id`       | Int    | ID grid                    |
+| `gridcode` | Int    | Numeric grid code          |
+
+**Example:**
+
+```json
+{
+  "layer": "green_spaces",
+  "distance_meters": 0,
+  "label": "Dense",
+  "color": "#34C759",
+  "attributes": {
+    "id": 12,
+    "rth": "Dense",
+    "gridcode": 3
+  }
+}
+```
+
+---
+
+## Layer: `population`
+
+**Classification field:** `jumlah_pen` (Double)
+
+No zone classification. Label displays the population count in the format `{n} people`.
+
+| Kondisi      | Color     |
+| ------------ | --------- |
+| Valid number | `#5AC8FA` |
+| Invalid      | `#8E8E93` |
+
+**Attributes (main fields):**
+
+| Field        | Tipe   | Keterangan                        |
+| ------------ | ------ | --------------------------------- |
+| `nama_kab`   | String | Regency name                      |
+| `nama_kec`   | String | District name                     |
+| `jumlah_pen` | Double | Total population count            |
+| `jumlah_kk`  | Double | Number of households              |
+| `pria`       | Double | Male population count             |
+| `wanita`     | Double | Female population count           |
+| `islam`      | Double | Muslim population count           |
+| `hindu`      | Double | Hindu population count            |
+| `kristen`    | Double | Protestant population count       |
+| `katholik`   | Double | Catholic population count         |
+| `budha`      | Double | Buddhist population count         |
+| `konghucu`   | Double | Confucian population count        |
+| `kawin`      | Double | Married                           |
+| `belum_kawi` | Double | Single / Never married            |
+| `cerai_hidu` | Double | Divorced                          |
+| `cerai_mati` | Double | Widowed                           |
+| `tamat_sd`   | Double | Completed primary school          |
+| `sltp`       | Double | Completed junior high school      |
+| `slta`       | Double | Completed senior high school      |
+| `d1_dan_d2`  | Double | Diploma D1/D2                     |
+| `d3`         | Double | Diploma D3                        |
+| `s1`         | Double | Bachelor's degree                 |
+| `s2`         | Double | Master's degree                   |
+| `s3`         | Double | Doctoral degree                   |
+| `belum_tama` | Double | Did not complete primary school   |
+| `belum_tida` | Double | Never attended school             |
+| `tidak_blm_` | Double | Not / never in school             |
+| `wiraswasta` | Double | Occupation: self-employed         |
+| `pelajar_ma` | Double | Student                           |
+| `mengurus_r` | Double | Homemaker                         |
+| `pensiunan`  | Double | Retired                           |
+| `perdaganga` | Double | Trader                            |
+| `guru`       | Double | Guru                              |
+| `perawat`    | Double | Nurse                             |
+| `nelayan`    | Double | Fisherman                         |
+| `pengacara`  | Double | Lawyer                            |
+| `lainnya`    | Double | Other occupations                 |
+| `u0`–`u75`   | Double | Age distribution per 5-year group |
+
+**Example:**
+
+```json
+{
+  "layer": "population",
+  "distance_meters": 0,
+  "label": "55352 people",
+  "color": "#5AC8FA",
+  "attributes": {
+    "nama_kab": "KAB. TABANAN",
+    "nama_kec": "BATURITI",
+    "jumlah_pen": 55352,
+    "jumlah_kk": 16798,
+    "pria": 27818,
+    "wanita": 27534
+  }
+}
+```
+
+---
+
+## Layer: `elevation`
+
+**Classification field:** `ketinggian` (String)
+
+| Zone Value | Label    | Color     |
+| ---------- | -------- | --------- |
+| `Lowland`  | Lowland  | `#FF9500` |
+| `Midland`  | Midland  | `#34C759` |
+| `Highland` | Highland | `#5AC8FA` |
+| _(other)_  | Unknown  | `#8E8E93` |
+
+**Attributes:**
+
+| Field        | Tipe   | Keterangan               |
+| ------------ | ------ | ------------------------ |
+| `ketinggian` | String | Elevation classification |
+
+**Example:**
+
+```json
+{
+  "layer": "elevation",
+  "distance_meters": 0,
+  "label": "Highland",
+  "color": "#5AC8FA",
+  "attributes": {
+    "ketinggian": "Highland"
+  }
+}
+```
+
+---
+
+## Layer: `roads_buffer`
+
+**Classification field:** `remark` (String)
+
+No zone classification. Label follows the `remark` value directly. Appears multiple times as a single point can fall within multiple road buffers simultaneously.
+
+| Zone Value       | Label          | Color     |
+| ---------------- | -------------- | --------- |
+| `Collector Road` | Collector Road | `#8E8E93` |
+| `Local Road`     | Local Road     | `#8E8E93` |
+| `Other Road`     | Other Road     | `#8E8E93` |
+| `Footpath`       | Footpath       | `#8E8E93` |
+| _(other)_        | Unknown        | `#8E8E93` |
+
+**Attributes:**
+
+| Field        | Tipe   | Keterangan              |
+| ------------ | ------ | ----------------------- |
+| `remark`     | String | Road type               |
+| `objectid_1` | Int    | Object ID in database   |
+| `shape_area` | Double | Buffer area size (m²)   |
+| `shape_leng` | Double | Perimeter length buffer |
+
+**Example:**
+
+```json
+{
+  "layer": "roads_buffer",
+  "distance_meters": 0,
+  "label": "Collector Road",
+  "color": "#8E8E93",
+  "attributes": {
+    "remark": "Collector Road",
+    "objectid_1": 2,
+    "shape_area": 828143032.733,
+    "shape_leng": 1514632.82135
+  }
+}
+```
+
+---
+
+## Layer: `public_facilities`
+
+**Classification field:** `kategori` (String)
+
+Appears multiple times, sorted by nearest first. Each item represents one facility category. `total` indicates the number of facilities in that category within the search radius.
+
+| Kategori contoh | Keterangan              |
+| --------------- | ----------------------- |
+| `kesehatan`     | Health facility         |
+| `pendidikan`    | Education facility      |
+| _(nilai lain)_  | Follows database values |
+
+**Attributes:**
+
+| Field      | Tipe   | Keterangan        |
+| ---------- | ------ | ----------------- |
+| `kategori` | String | Facility category |
+
+**Additional field at root level (not inside attributes):**
+
+| Field   | Tipe | Keterangan                            |
+| ------- | ---- | ------------------------------------- |
+| `total` | Int  | Number of facilities in this category |
+
+**Example:**
+
+```json
+{
+  "layer": "public_facilities",
+  "distance_meters": 771,
+  "label": "kesehatan",
+  "color": "#8E8E93",
+  "attributes": {
+    "kategori": "kesehatan"
+  },
+  "total": 1
+}
+```
+
+---
+
+## Layer: `wifi`
+
+No zone classification. Label displays download and upload speeds directly.
+
+| Kondisi        | Color     |
+| -------------- | --------- |
+| Data available | `#5AC8FA` |
+
+**Attributes:**
+
+| Field        | Tipe   | Keterangan                  |
+| ------------ | ------ | --------------------------- |
+| `dl_mbps`    | Double | Download speed (Mbps)       |
+| `ul_mbps`    | Double | Upload speed (Mbps)         |
+| `avg_lat_ms` | Int    | Average latency (ms)        |
+| `avg_d_kbps` | Int    | Average download (Kbps)     |
+| `avg_u_kbps` | Int    | Average upload (Kbps)       |
+| `tests`      | Int    | Number of tests conducted   |
+| `devices`    | Int    | Number of devices tested    |
+| `quadkey`    | String | Map grid key (Bing quadkey) |
+
+**Example:**
+
+```json
+{
+  "layer": "wifi",
+  "distance_meters": 0,
+  "label": "Download 68.9 Mbps, Upload 52.8 Mbps",
+  "color": "#5AC8FA",
+  "attributes": {
+    "dl_mbps": 68.9,
+    "ul_mbps": 52.77,
+    "avg_lat_ms": 28,
+    "avg_d_kbps": 68905,
+    "avg_u_kbps": 52772,
+    "tests": 9,
+    "devices": 2,
+    "quadkey": "3101020333303222"
+  }
+}
+```
+
+---
+
+## Layer: `mobile_data`
+
+Identical structure to `wifi`, but measures mobile network speed.
+
+**Attributes:**
+
+| Field        | Tipe   | Keterangan                  |
+| ------------ | ------ | --------------------------- |
+| `dl_mbps`    | Double | Download speed (Mbps)       |
+| `ul_mbps`    | Double | Upload speed (Mbps)         |
+| `avg_lat_ms` | Int    | Average latency (ms)        |
+| `avg_d_kbps` | Int    | Average download (Kbps)     |
+| `avg_u_kbps` | Int    | Average upload (Kbps)       |
+| `tests`      | Int    | Number of tests conducted   |
+| `devices`    | Int    | Number of devices tested    |
+| `quadkey`    | String | Map grid key (Bing quadkey) |
+
+**Example:**
+
+```json
+{
+  "layer": "mobile_data",
+  "distance_meters": 0,
+  "label": "Download 30.9 Mbps, Upload 14.2 Mbps",
+  "color": "#5AC8FA",
+  "attributes": {
+    "dl_mbps": 30.92,
+    "ul_mbps": 14.21,
+    "avg_lat_ms": 16,
+    "avg_d_kbps": 30921,
+    "avg_u_kbps": 14213,
+    "tests": 1,
+    "devices": 1,
+    "quadkey": "3101020333303222"
+  }
+}
+```
+
+---
+
+## Layer: `crime`
+
+No zone classification. Label displays total criminal cases.
+
+| Kondisi        | Color     |
+| -------------- | --------- |
+| Data available | `#FF9500` |
+
+**Attributes:**
+
+| Field            | Tipe   | Keterangan                        |
+| ---------------- | ------ | --------------------------------- |
+| `crime_total`    | Int    | Total criminal cases              |
+| `crime_cleared`  | Int    | Number of cases resolved          |
+| `clearance_rate` | Double | Case resolution rate (%)          |
+| `crime_rate`     | Double | Crime rate per 100,000 population |
+| `tahun`          | Int    | Data year                         |
+| `nama_kab`       | String | Regency name                      |
+| `jumlah_pen`     | Double | Regency population count          |
+| `jumlah_kk`      | Double | Number of households kabupaten    |
+| `sumber`         | String | Data source                       |
+
+**Example:**
+
+```json
+{
+  "layer": "crime",
+  "distance_meters": 0,
+  "label": "1057 cases",
+  "color": "#FF9500",
+  "attributes": {
+    "crime_total": 1057,
+    "crime_cleared": 844,
+    "clearance_rate": 79.85,
+    "crime_rate": 226.78,
+    "tahun": 2023,
+    "nama_kab": "KAB. TABANAN",
+    "jumlah_pen": 476472,
+    "jumlah_kk": 153216,
+    "sumber": "BPS - Statistik Kriminal Provinsi Bali 2023 (Polda Bali)"
+  }
+}
+```
+
+---
+
+## Multiplicity Notes
+
+| Layer               | Occurrences | Reason                                        |
+| ------------------- | ----------- | --------------------------------------------- |
+| `flood`             | Max. 1 time | `ST_Intersects` with `LIMIT 1`                |
+| `temperature`       | Max. 1 time | `ST_Intersects` with `LIMIT 1`                |
+| `air_quality`       | Max. 1 time | `ST_Intersects` with `LIMIT 1`                |
+| `green_spaces`      | Max. 1 time | `ST_Intersects` with `LIMIT 1`                |
+| `population`        | Max. 1 time | `ST_Intersects` with `LIMIT 1`                |
+| `elevation`         | Max. 1 time | `ST_Intersects` with `LIMIT 1`                |
+| `wifi`              | Max. 1 time | `ST_Intersects` with `LIMIT 1`                |
+| `mobile_data`       | Max. 1 time | `ST_Intersects` with `LIMIT 1`                |
+| `crime`             | Max. 1 time | `ST_Intersects` with `LIMIT 1`                |
+| `roads_buffer`      | Multiple    | A point can fall within multiple road buffers |
+| `public_facilities` | Multiple    | Radius search per facility category           |
