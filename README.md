@@ -93,6 +93,15 @@ We added a capability check before invoking the session and fall back to display
 
 ---
 
+**Situation 3: `LanguageModelSession` only supports English**
+
+Foundation Models `LanguageModelSession` generates output in English only, regardless of the device's system language. Since our app supports both English and Bahasa Indonesia, the AI-generated property risk summary is always displayed in English even when the user is using the app in Bahasa Indonesia.
+
+How we worked around it:
+We generate the summary in English first, then pass it back to LanguageModelSession to translate it into the user's active language.
+
+---
+
 ## The Revised Decision
 
 **Final decision:**
