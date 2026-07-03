@@ -334,44 +334,101 @@ enum ReverseGeocodeService {
 
 // MARK: - Ringkasan Overview via Apple Foundation Models (on-device, iOS 26+)
 
+#if canImport(FoundationModels)
 @available(iOS 26.0, *)
+@MainActor
 enum OverviewAI {
-    /// Rangkum parameter wilayah jadi satu paragraf natural.
-    /// Nil kalau model tidak tersedia (device tak didukung / Apple Intelligence off).
-    static func summarize(placeName: String, subtitle: String, intel: PlaceIntel) async -> String? {
-        #if canImport(FoundationModels)
-        let model = SystemLanguageModel.default
-        guard case .available = model.availability else { return nil }
+    /// Hasil ringkasan:
+    /// - direct: sudah dalam bahasa app, langsung tampil
+    /// - needsTranslation: Inggris — caller menerjemahkan EN→ID via Translation framework
+    /// - unavailable: model tak tersedia / gagal total → pakai template lokal
+    enum Outcome {
+        case direct(String)
+        case needsTranslation(String)
+        case unavailable
+    }
 
-        // Ikuti bahasa app (Settings / App Language): id → Bahasa Indonesia, selain itu Inggris.
-        let isIndonesian = Locale.current.language.languageCode?.identifier == "id"
-        let outputLanguage = isIndonesian ? "Bahasa Indonesia" : "English"
-        let session = LanguageModelSession(instructions: """
+    /// Muat model ke memori lebih awal supaya request pertama tidak lambat.
+    static func prewarm() {
+        guard case .available = SystemLanguageModel.default.availability else { return }
+        LanguageModelSession(model: .default).prewarm(promptPrefix: nil)
+    }
+
+    /// Rangkum parameter wilayah. Teks parsial dikirim lewat onPartial (streaming),
+    /// jadi UI bisa menampilkan paragraf sambil di-generate.
+    static func summarize(
+        placeName: String,
+        subtitle: String,
+        intel: PlaceIntel,
+        preferIndonesian: Bool,
+        allowDirectIndonesian: Bool,
+        onPartial: (String) -> Void
+    ) async -> Outcome {
+        guard case .available = SystemLanguageModel.default.availability else { return .unavailable }
+
+        let prompt = promptText(placeName: placeName, subtitle: subtitle, intel: intel)
+
+        // Jalur 1: minta Bahasa Indonesia langsung (best-effort — id belum resmi didukung).
+        if preferIndonesian && allowDirectIndonesian {
+            if let direct = try? await generate(prompt: prompt, inIndonesian: true, onPartial: onPartial),
+               !direct.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return .direct(direct)
+            }
+        }
+
+        // Jalur 2: Inggris (bahasa terkuat model); diterjemahkan caller bila perlu.
+        do {
+            let english = try await generate(prompt: prompt, inIndonesian: false, onPartial: onPartial)
+            guard !english.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                return .unavailable
+            }
+            return preferIndonesian ? .needsTranslation(english) : .direct(english)
+        } catch {
+            return .unavailable
+        }
+    }
+
+    // MARK: - Private
+
+    private static func generate(
+        prompt: String,
+        inIndonesian: Bool,
+        onPartial: (String) -> Void
+    ) async throws -> String {
+        let languageLine = inIndonesian
+            ? "Write the paragraph in Bahasa Indonesia."
+            : "Write the paragraph in English."
+        let session = LanguageModelSession(
+            model: .default,
+            instructions: """
             You are a property-location analyst. Summarize the given area parameters \
             into ONE short natural paragraph (max 70 words) for home buyers. \
             Plain prose only — no lists, no headings, no markdown. \
-            Write the paragraph in \(outputLanguage).
-            """)
-        let prompt = """
-            Area: \(placeName), \(subtitle)
-            Average temperature: \(String(format: "%.1f", intel.avgTemp))°C (level: \(intel.temperatureLevel))
-            Flood risk: \(intel.floodRisk)
-            Air quality: \(intel.airQualityLevel) (AQI \(intel.aqi))
-            Water quality: \(intel.waterQuality)/100
-            Elevation: \(intel.elevation) m above sea level
-            Crime rate: \(intel.crimeLevel)
-            Green space: \(intel.greenPercent)% (\(intel.greenSpaces))
-            Road access: \(intel.roadAccess)
-            Public facilities within 2 km: \(intel.facilityCount)
+            \(languageLine)
             """
-        do {
-            let response = try await session.respond(to: prompt)
-            return response.content
-        } catch {
-            return nil
+        )
+        var latest = ""
+        let stream = session.streamResponse(to: prompt)
+        for try await snapshot in stream {
+            latest = snapshot.content
+            onPartial(latest)
         }
-        #else
-        return nil
-        #endif
+        return latest
+    }
+
+    private static func promptText(placeName: String, subtitle: String, intel: PlaceIntel) -> String {
+        """
+        Area: \(placeName), \(subtitle)
+        Average temperature: \(String(format: "%.1f", intel.avgTemp))°C (level: \(intel.temperatureLevel))
+        Flood risk: \(intel.floodRisk)
+        Air quality: \(intel.airQualityLevel) (AQI \(intel.aqi))
+        Water quality: \(intel.waterQuality)/100
+        Elevation: \(intel.elevation) m above sea level
+        Crime rate: \(intel.crimeLevel)
+        Green space: \(intel.greenPercent)% (\(intel.greenSpaces))
+        Road access: \(intel.roadAccess)
+        Public facilities within 2 km: \(intel.facilityCount)
+        """
     }
 }
+#endif

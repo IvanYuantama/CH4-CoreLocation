@@ -1,5 +1,6 @@
 import SwiftUI
 import MapKit
+import Translation
 
 // MARK: - Layar peta utama
 
@@ -37,7 +38,13 @@ struct MainMapView: View {
             mapCenter = context.region.center
             weather.loadIfNeeded(for: context.region.center)
         }
-        .task { weather.loadIfNeeded(for: mapCenter) }
+        .task {
+            weather.loadIfNeeded(for: mapCenter)
+            // Panaskan model AI sejak awal biar ringkasan pertama tidak lambat.
+            if #available(iOS 26.0, *) {
+                OverviewAI.prewarm()
+            }
+        }
         .onTapGesture { screenPoint in
             guard let coordinate = proxy.convert(screenPoint, from: .local) else { return }
             handleMapTap(at: coordinate)
@@ -362,9 +369,19 @@ struct PlaceDetailView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var aiOverview: String?
+    @State private var translatedOverview: String?
     @State private var isSummarizing = false
+    @State private var isTranslating = false
+    @State private var translationConfig: TranslationSession.Configuration?
+
+    // Sekali jalur "minta Indonesia langsung" gagal di device ini, langsung
+    // pakai jalur EN + translate di run berikutnya (hindari generate dua kali).
+    @AppStorage("directIndonesianFailed") private var directIndonesianFailed = false
 
     private var intel: PlaceIntel { .mock(for: place.coordinate) }
+    private var prefersIndonesian: Bool {
+        Locale.current.language.languageCode?.identifier == "id"
+    }
 
     var body: some View {
         ScrollView {
@@ -402,23 +419,31 @@ struct PlaceDetailView: View {
                 miniMap
 
                 section("Overview") {
-                    if isSummarizing {
+                    // Teks tampil sambil di-stream (aiOverview terisi progresif).
+                    Text(translatedOverview ?? aiOverview ?? (isSummarizing ? "" : intel.overview))
+                        .font(.caption)
+                        .foregroundStyle(.primary)
+                        .lineSpacing(3)
+                    if isSummarizing && (aiOverview ?? "").isEmpty {
                         HStack(spacing: 8) {
                             ProgressView()
                             Text("Summarizing with Apple Intelligence…")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
-                    } else {
-                        Text(aiOverview ?? intel.overview)
-                            .font(.caption)
-                            .foregroundStyle(.primary)
-                            .lineSpacing(3)
-                        if aiOverview != nil {
-                            Label("Summarized on-device by Apple Intelligence", systemImage: "sparkles")
-                                .font(.caption2)
-                                .foregroundStyle(Theme.primary)
+                    }
+                    if isTranslating {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                            Text("Translating…")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
+                    }
+                    if !isSummarizing && !isTranslating && (translatedOverview ?? aiOverview) != nil {
+                        Label("Summarized on-device by Apple Intelligence", systemImage: "sparkles")
+                            .font(.caption2)
+                            .foregroundStyle(Theme.primary)
                     }
                 }
 
@@ -449,15 +474,58 @@ struct PlaceDetailView: View {
             .padding(20)
         }
         .presentationDragIndicator(.visible)
+        .translationTask(translationConfig) { session in
+            guard let source = aiOverview else {
+                isTranslating = false
+                return
+            }
+            do {
+                let response = try await session.translate(source)
+                translatedOverview = response.targetText
+            } catch {
+                // Gagal translate → tampilkan teks Inggris apa adanya.
+                translatedOverview = nil
+            }
+            isTranslating = false
+        }
         .task {
             guard #available(iOS 26.0, *) else { return }
             isSummarizing = true
-            aiOverview = await OverviewAI.summarize(
+            let outcome = await OverviewAI.summarize(
                 placeName: place.name,
                 subtitle: place.subtitle,
-                intel: intel
-            )
+                intel: intel,
+                preferIndonesian: prefersIndonesian,
+                allowDirectIndonesian: !directIndonesianFailed
+            ) { partial in
+                aiOverview = partial   // streaming: paragraf tampil sambil jadi
+            }
             isSummarizing = false
+            switch outcome {
+            case .direct(let text):
+                aiOverview = text
+                if prefersIndonesian { directIndonesianFailed = false }
+            case .needsTranslation(let text):
+                directIndonesianFailed = true
+                aiOverview = text
+                startTranslation()
+            case .unavailable:
+                aiOverview = nil   // fallback: template lokal ter-lokalisasi
+            }
+        }
+    }
+
+    /// Pemicu translate yang bisa diulang — assign config bernilai sama tidak
+    /// me-retrigger .translationTask, harus invalidate().
+    private func startTranslation() {
+        isTranslating = true
+        if translationConfig == nil {
+            translationConfig = .init(
+                source: .init(identifier: "en"),
+                target: .init(identifier: "id")
+            )
+        } else {
+            translationConfig?.invalidate()
         }
     }
 
