@@ -269,10 +269,16 @@ struct SearchSheet: View {
                 let found = try await PlaceSearchService.search(completion: completion, around: center)
                 results = found
                 if found.isEmpty {
-                    errorMessage = "Tidak ada hasil untuk \"\(completion.title)\"."
+                    errorMessage = String(
+                        format: NSLocalizedString("No results for \"%@\".", comment: ""),
+                        completion.title
+                    )
                 }
             } catch {
-                errorMessage = "Gagal mencari: \(error.localizedDescription)"
+                errorMessage = String(
+                    format: NSLocalizedString("Search failed: %@", comment: ""),
+                    error.localizedDescription
+                )
             }
         }
     }
@@ -286,10 +292,16 @@ struct SearchSheet: View {
                 let found = try await PlaceSearchService.search(query: query, around: center)
                 results = found
                 if found.isEmpty {
-                    errorMessage = "Tidak ada hasil untuk \"\(query)\"."
+                    errorMessage = String(
+                        format: NSLocalizedString("No results for \"%@\".", comment: ""),
+                        query
+                    )
                 }
             } catch {
-                errorMessage = "Gagal mencari: \(error.localizedDescription)"
+                errorMessage = String(
+                    format: NSLocalizedString("Search failed: %@", comment: ""),
+                    error.localizedDescription
+                )
             }
         }
     }
@@ -393,7 +405,7 @@ struct PlaceDetailView: View {
                     if isSummarizing {
                         HStack(spacing: 8) {
                             ProgressView()
-                            Text("Merangkum dengan Apple Intelligence…")
+                            Text("Summarizing with Apple Intelligence…")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -403,7 +415,7 @@ struct PlaceDetailView: View {
                             .foregroundStyle(.primary)
                             .lineSpacing(3)
                         if aiOverview != nil {
-                            Label("Diringkas on-device oleh Apple Intelligence", systemImage: "sparkles")
+                            Label("Summarized on-device by Apple Intelligence", systemImage: "sparkles")
                                 .font(.caption2)
                                 .foregroundStyle(Theme.primary)
                         }
@@ -430,7 +442,7 @@ struct PlaceDetailView: View {
                     ])
                 }
 
-                Text("Data lingkungan di atas masih mock (prototype).")
+                Text("Environment data above is still mocked (prototype).")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
@@ -478,10 +490,10 @@ struct PlaceDetailView: View {
             ForEach(Array(items.enumerated()), id: \.offset) { _, item in
                 HStack(spacing: 10) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(item.0)
+                        Text(LocalizedStringKey(item.0))
                             .font(.caption2)
                             .foregroundStyle(.secondary)
-                        Text(item.1)
+                        Text(LocalizedStringKey(item.1))
                             .font(.subheadline.weight(.bold))
                     }
                     Spacer()

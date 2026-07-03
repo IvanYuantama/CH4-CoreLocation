@@ -70,7 +70,7 @@ enum PlaceSearchService {
             let subtitle = subtitleParts.filter { seen.insert($0).inserted }.joined(separator: ", ")
 
             return PlaceResult(
-                name: item.name ?? "Tanpa nama",
+                name: item.name ?? NSLocalizedString("Unnamed", comment: ""),
                 subtitle: subtitle,
                 latitude: coordinate.latitude,
                 longitude: coordinate.longitude,
@@ -98,13 +98,20 @@ struct PlaceIntel {
     let roadAccess: String
     let facilityCount: Int
 
+    /// Paragraf fallback (non-AI), ter-lokalisasi lewat template di Localizable.xcstrings.
     var overview: String {
-        "This area offers good accessibility with major roads nearby and \(facilityCount) "
-        + "public facilities within 2 km. Water quality is moderate (\(waterQuality)/100), "
-        + "while air quality is \(airQualityLevel.lowercased()) (AQI \(aqi)). The elevation is "
-        + "\(elevation) m above sea level with an average temperature of "
-        + String(format: "%.1f", avgTemp) + "°C. A \(crimeLevel.lowercased()) crime rate and "
-        + "\(greenPercent)% green space support a comfortable environment."
+        func localized(_ key: String) -> String { NSLocalizedString(key, comment: "") }
+        return String(
+            format: NSLocalizedString("overview_template", comment: ""),
+            String(facilityCount),
+            String(waterQuality),
+            localized(airQualityLevel).lowercased(),
+            String(aqi),
+            String(elevation),
+            String(format: "%.1f", avgTemp),
+            localized(crimeLevel).lowercased(),
+            String(greenPercent)
+        )
     }
 
     static func mock(for coordinate: CLLocationCoordinate2D) -> PlaceIntel {
@@ -159,7 +166,7 @@ final class LocationManager: NSObject, ObservableObject {
         case .notDetermined:
             manager.requestWhenInUseAuthorization()
         case .restricted, .denied:
-            errorMessage = "Izin lokasi ditolak. Aktifkan di Settings."
+            errorMessage = NSLocalizedString("Location permission denied. Enable it in Settings.", comment: "")
         default:
             manager.startUpdatingLocation()
         }
@@ -187,7 +194,10 @@ extension LocationManager: CLLocationManagerDelegate {
 
     nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         Task { @MainActor in
-            self.errorMessage = "Gagal ambil lokasi: \(error.localizedDescription)"
+            self.errorMessage = String(
+                format: NSLocalizedString("Failed to get location: %@", comment: ""),
+                error.localizedDescription
+            )
         }
     }
 }
@@ -298,7 +308,7 @@ enum ReverseGeocodeService {
         let name = placemark.name
             ?? placemark.subLocality
             ?? placemark.locality
-            ?? "Lokasi terpilih"
+            ?? NSLocalizedString("Selected location", comment: "")
         let subtitleParts = [
             placemark.subLocality,
             placemark.locality,
@@ -333,10 +343,14 @@ enum OverviewAI {
         let model = SystemLanguageModel.default
         guard case .available = model.availability else { return nil }
 
+        // Ikuti bahasa app (Settings / App Language): id → Bahasa Indonesia, selain itu Inggris.
+        let isIndonesian = Locale.current.language.languageCode?.identifier == "id"
+        let outputLanguage = isIndonesian ? "Bahasa Indonesia" : "English"
         let session = LanguageModelSession(instructions: """
             You are a property-location analyst. Summarize the given area parameters \
-            into ONE short natural English paragraph (max 70 words) for home buyers. \
-            Plain prose only — no lists, no headings, no markdown.
+            into ONE short natural paragraph (max 70 words) for home buyers. \
+            Plain prose only — no lists, no headings, no markdown. \
+            Write the paragraph in \(outputLanguage).
             """)
         let prompt = """
             Area: \(placeName), \(subtitle)
