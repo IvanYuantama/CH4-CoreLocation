@@ -1,0 +1,66 @@
+//
+//  DataPreferenceView.swift
+//  CH4-ProPerty
+//
+//  Created by Andhika Satria on 05/07/26.
+//
+
+import SwiftUI
+
+struct DataPreferenceView: View {
+    @ObservedObject var vm: SettingsViewModel
+    
+    var body: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 0) { // Spacing 0 agar Divider merapat
+                HStack {
+                    Text("Data Preferences")
+                        .font(Theme.Typography.title)
+                        .foregroundColor(Theme.textPrimary)
+                    Spacer()
+                    Image(systemName: "message")
+                        .font(.title2)
+                }
+                .padding(.top, 24)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 20)
+                
+                Group {
+                    Divider()
+                    PreferenceRadioRow(title: "Temperature", subtitle: "Display the average temperature (Low - High)", isSelected: vm.showTemperature) { vm.showTemperature.toggle() }
+                    
+                    Divider().padding(.leading, 24)
+                    PreferenceRadioRow(title: "Flood Risk", subtitle: "Display the risk of flooding (Low - High)", isSelected: vm.showFloodRisk) { vm.showFloodRisk.toggle() }
+                    
+                    Divider().padding(.leading, 24)
+                    PreferenceRadioRow(title: "Air Quality", subtitle: "Display the air quality level", isSelected: vm.showAirQuality) { vm.showAirQuality.toggle() }
+                    
+                    Divider().padding(.leading, 24)
+                    PreferenceRadioRow(title: "Green Spaces", subtitle: "Display green space availability", isSelected: vm.showGreenSpaces) { vm.showGreenSpaces.toggle() }
+                    
+                    Divider().padding(.leading, 24)
+                    PreferenceRadioRow(title: "Road Access", subtitle: "Display primary road access type", isSelected: vm.showRoadAccess) { vm.showRoadAccess.toggle() }
+                    
+                    Divider().padding(.leading, 24)
+                    PreferenceRadioRow(title: "Public Facilities", subtitle: "Display nearby public facilities", isSelected: vm.showPublicFacilities) { vm.showPublicFacilities.toggle() }
+                    
+                    Divider().padding(.leading, 24)
+                    PreferenceRadioRow(title: "Population", subtitle: "Display area population count", isSelected: vm.showPopulation) { vm.showPopulation.toggle() }
+                    
+                    Divider().padding(.leading, 24)
+                    PreferenceRadioRow(title: "Families", subtitle: "Display total families in the area", isSelected: vm.showFamilies) { vm.showFamilies.toggle() }
+                    
+                    Divider().padding(.leading, 24)
+                    PreferenceRadioRow(title: "Elevation", subtitle: "Display geography elevation level", isSelected: vm.showElevation) { vm.showElevation.toggle() }
+                }
+                
+                Spacer(minLength: 40)
+            }
+        }
+        .background(Theme.background.ignoresSafeArea())
+    }
+}
+
+#Preview {
+    DataPreferenceView(vm: SettingsViewModel())
+}

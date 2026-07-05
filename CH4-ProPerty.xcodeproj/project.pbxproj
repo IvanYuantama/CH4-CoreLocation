@@ -7,11 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7A1520B42FF794F600968FEF /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A1520B32FF794F600968FEF /* Localizable.xcstrings */; };
+		7A13B49C2FFA764100B769CE /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A13B4962FFA75FD00B769CE /* CoreLocation.framework */; };
+		7A13B49F2FFA764300B769CE /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A13B49A2FFA763500B769CE /* Foundation.framework */; };
+		7A13B4A12FFA764300B769CE /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A13B4922FFA75EB00B769CE /* MapKit.framework */; };
+		7A13B4A32FFA764500B769CE /* Translation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A13B4982FFA762C00B769CE /* Translation.framework */; };
+		7A13B4A52FFA764600B769CE /* WeatherKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A13B4942FFA75F100B769CE /* WeatherKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		7A1520B32FF794F600968FEF /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		7A13B4922FFA75EB00B769CE /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
+		7A13B4942FFA75F100B769CE /* WeatherKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WeatherKit.framework; path = System/Library/Frameworks/WeatherKit.framework; sourceTree = SDKROOT; };
+		7A13B4962FFA75FD00B769CE /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
+		7A13B4982FFA762C00B769CE /* Translation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Translation.framework; path = System/Library/Frameworks/Translation.framework; sourceTree = SDKROOT; };
+		7A13B49A2FFA763500B769CE /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		7A339F752FF3784200F55677 /* CH4-ProPerty.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CH4-ProPerty.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -41,17 +49,34 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A13B4A32FFA764500B769CE /* Translation.framework in Frameworks */,
+				7A13B49F2FFA764300B769CE /* Foundation.framework in Frameworks */,
+				7A13B49C2FFA764100B769CE /* CoreLocation.framework in Frameworks */,
+				7A13B4A12FFA764300B769CE /* MapKit.framework in Frameworks */,
+				7A13B4A52FFA764600B769CE /* WeatherKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7A13B4912FFA75EA00B769CE /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				7A13B49A2FFA763500B769CE /* Foundation.framework */,
+				7A13B4982FFA762C00B769CE /* Translation.framework */,
+				7A13B4962FFA75FD00B769CE /* CoreLocation.framework */,
+				7A13B4942FFA75F100B769CE /* WeatherKit.framework */,
+				7A13B4922FFA75EB00B769CE /* MapKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		7A339F6C2FF3784200F55677 = {
 			isa = PBXGroup;
 			children = (
-				7A1520B32FF794F600968FEF /* Localizable.xcstrings */,
 				7A339F772FF3784200F55677 /* CH4-ProPerty */,
+				7A13B4912FFA75EA00B769CE /* Frameworks */,
 				7A339F762FF3784200F55677 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -129,7 +154,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7A1520B42FF794F600968FEF /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

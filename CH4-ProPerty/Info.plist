@@ -7,13 +7,12 @@
 	<key>MKDirectionsApplicationSupportedModes</key>
 	<array/>
 	<key>NSLocationDefaultAccuracyReduced</key>
-	<false/>
+	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
 		<string>fetch</string>
 		<string>processing</string>
-		<string>push-to-talk</string>
 	</array>
 </dict>
 </plist>
