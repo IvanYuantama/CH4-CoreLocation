@@ -19,10 +19,10 @@ We think we'll end up using:
 - MapKit for rendering the property map and displaying pins
 - CoreLocation for capturing the user's GPS coordinates
 - GeoToolbox for surfacing location details such as place names, Google Maps links, and nearby point-of-interest information at a tapped coordinate
-- An external AI API (such as OpenAI) for generating a property risk summary
+- WeatherKit for capturing variables like temperature, humidity, etc
 
 Because:
-MapKit and CoreLocation are the standard Apple pairing for anything location based, so they felt like the obvious fit from the start. We assumed MapKit alone would not be enough to surface rich location metadata like formatted addresses and map links, so GeoToolbox seemed like a necessary addition. For the AI summary, we assumed we would use external Open AI API to generate it cause the setup is easy and it was the most familiar option to us at the time.
+MapKit and CoreLocation are the standard Apple pairing for anything location based, so they felt like the obvious fit from the start. We assumed MapKit alone would not be enough to surface rich location metadata like formatted addresses and map links, so GeoToolbox seemed like a necessary addition. We use WeatherKit to get real time variable data so it can be more additional data.
 
 ---
 
@@ -35,19 +35,17 @@ _Not your conclusion, your actual process. Update this as you go, it doesn't nee
 - We explored MapKit's `MKCoordinateRegion` and `MKMapView` to understand how to center the map on a live coordinate. The setup was straightforward.
 - We looked for reverse geocoding and find that with `CLGeocoder`, we can implement that.
 - We discovered `MKMapItem` can generate more details than `GeoToolBox` for pin location. So we decide to use only `MKMapItem` for our app.
-- We discovered Apple's Foundation Models framework (`LanguageModelSession`) can generate good summary without addition of OpenAPI.
 
 **What we actually built or tested in code:**
 
 - A `LocationManager` class using `CLLocationManager` with `requestWhenInUseAuthorization()` that publishes the live coordinate via `@Published` for SwiftUI binding.
 - An `MKCoordinateRegion` binding that re-centers the map whenever the user's coordinate updates.
 - A reverse geocoding flow using `CLGeocoder.reverseGeocodeLocation()` that populates a detail card with a formatted address and a Maps link via `MKMapItem`.
-- A `LanguageModelSession` prompt that receives the full JSON response from our `/api/analyze` endpoint and produces a single paragraph summarizing the property's risk profile.
+- A WeatherModel class using `WeatherService.shared.weather(for:)` that fetches current temperature, humidity, precipitation, and UV index for the selected coordinate, requiring the WeatherKit capability to be activated on an Apple Developer account.
 - A PostGIS + Express.js backend (`/api/analyze`) returning raw property's risk data for any coordinate, The data contain like flood zones, air quality, temperature, elevation, population density, green spaces, road access, public facilities, internet connectivity, and crime statistics.
 
 **What we discovered that we didn't expect:**
 
-- `LanguageModelSession` (Foundation Models) runs fully on-device with no API key, no network call, and no usage cost. This was a significant departure from our starting assumption.
 - Supabase free tier no longer exposes a direct PostgreSQL connection for new projects, routing all traffic through PgBouncer in transaction pooling mode. This caused abnormally high query planning times and overall API response times of 8–10 seconds.
 - Migrating the database to Neon resolved the direct connection issue and brought API response time down to under 2 seconds.
 
@@ -84,35 +82,17 @@ We migrated the database from Supabase to Neon, which supports direct PostgreSQL
 
 ---
 
-**Situation 2: `LanguageModelSession` device and OS requirements**
-
-Foundation Models' `LanguageModelSession` requires a device with Apple Silicon and iOS 26 or later. It is not available in the simulator and is unavailable on older devices.
-
-How we worked around it:
-We added a capability check before invoking the session and fall back to displaying a card if the model is unavailable on the user's device.
-
----
-
-**Situation 3: `LanguageModelSession` only supports English**
-
-Foundation Models `LanguageModelSession` generates output in English only, regardless of the device's system language. Since our app supports both English and Bahasa Indonesia, the AI-generated property risk summary is always displayed in English even when the user is using the app in Bahasa Indonesia.
-
-How we worked around it:
-We generate the summary in English first, then pass it back to LanguageModelSession to translate it into the user's active language.
-
----
-
 ## The Revised Decision
 
 **Final decision:**
 
 - **CoreLocation**: live GPS coordinate capture via Location Manager, and address resolution via CLGeocoder (Reverse Geocoding)
 - **MapKit**: map rendering and Coordinate Region centering
-- **Foundation Models (`LanguageModelSession`)**: on-device AI summary generation from structured property risk data
+- **WeatherKit**: for giving additional variabel data to make our app more detail.
 
 **What changed since Section 1, and why:**
 
-The only meaningful change was replacing the assumed external AI API with Apple's on-device `LanguageModelSession` cause we discovered that Foundation Models runs fully on-device with no API key or network dependency required, and its output quality was sufficient for summarizing structured JSON data into a readable property risk overview. The CoreLocation and MapKit pairing held exactly as assumed, and CLGeocoder (which was already part of CoreLocation) proved even easier to integrate than expected.
+The CoreLocation and MapKit pairing held exactly as assumed, and CLGeocoder (which was already part of CoreLocation) proved even easier to integrate than expected.
 
 ---
 
@@ -120,9 +100,9 @@ The only meaningful change was replacing the assumed external AI API with Apple'
 
 ### About the Frameworks
 
-All three frameworks are genuinely necessary and work together in sequence. CoreLocation provides the coordinate and resolves the address, MapKit consumes that coordinate to render the map and display the surrounding area, Foundation Models consumes the environmental data retrieved using that same coordinate to generate the summary paragraph. Removing any one of them degrades the core use case: without CoreLocation there is no coordinate or address, without MapKit there is no spatial context, and without Foundation Models the user must interpret raw layer data themselves instead of getting a single readable overview.
+All three frameworks are genuinely necessary and work together in sequence. CoreLocation provides the coordinate and resolves the address, MapKit consumes that coordinate to render the map and display the surrounding area, WeatherKit consumes that same coordinate to fetch real-time environmental variables (temperature, humidity, precipitation, UV index) that enrich the property overview with live conditions rather than static data alone. Removing any one of them degrades the core use case: without CoreLocation there is no coordinate or address, without MapKit there is no spatial context, and without WeatherKit the property overview is limited to static risk data with no live environmental signal.
 
-The challenge response reflects this: _Create an app that utilizes Location Manager for location tracking, Reverse Geocoding for address resolution, Coordinate Regions for map navigation, and a Language Model Session to generate a concise, easy-to-read risk summary for any selected property._
+The challenge response reflects this: _Create an app that utilizes Location Manager for location tracking, Reverse Geocoding for address resolution, Coordinate Regions for map navigation, and WeatherService to to fetch and present environmental conditions data for any selected property._
 
 ### About Accessibility and Localization
 
@@ -130,6 +110,6 @@ We localized the app in two languages: `English` and `Bahasa Indonesia`. The tar
 
 ### About Privacy
 
-The app requests a single permission: `NSLocationWhenInUseUsageDescription`, which allows location access only while the app is in the foreground. No location data is stored on-device or transmitted beyond the coordinate sent to our own backend API for spatial analysis. The AI summary is generated entirely on-device by Foundation Models and never leaves the device.
+The app requests a single permission: `NSLocationWhenInUseUsageDescription`, which allows location access only while the app is in the foreground. No location data is stored on-device or transmitted beyond the coordinate sent to our own backend API for spatial analysis.
 
 If the user denies location permission, the map defaults to a region centered on Bali and the "analyze current location" button is disabled. A card is shown to guide the user to enable location access in Settings. Everything else in the app still works normally.
