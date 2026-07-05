@@ -5,106 +5,112 @@
 //  Created by Andhika Satria on 30/06/26.
 //
 
+
 import SwiftUI
 import MapKit
 
 struct MapContainerView: View {
 
-    @State private var viewModel       = MapViewModel()
-    @State private var weatherManager  = WeatherManager()
-    @State private var locationManager = LocationManager()
+    @State private var viewModel        = MapViewModel()
+    @State private var weatherManager   = WeatherManager()
+    @State private var locationManager  = LocationManager()
 
     @Namespace private var mapScope
 
     var body: some View {
         ZStack {
-
-            // MARK: Layer 1 — Base Map (full screen)
             MapReader { proxy in
                 Map(position: $viewModel.cameraPosition, scope: mapScope) {
                     UserAnnotation()
 
-                    if let tapped = viewModel.tappedCoordinate {
-                        Marker("Selected Location", coordinate: tapped)
-                            .tint(.blue)
+                    if let pinned = viewModel.pinnedPlace {
+                        Marker(pinned.name, coordinate: pinned.coordinate)
+                            .tint(Theme.pin)
                     }
                 }
                 .mapStyle(viewModel.mapStyle)
                 .mapControls { MapCompass().mapControlVisibility(.hidden) }
                 .ignoresSafeArea()
 
-                // Tap → cari POI atau reverse geocode
+                // onMapCameraChange — dari teman tim, lebih baik dari onChange(cameraPosition)
+                // Langsung dapat context.region.center tanpa hitung manual
+                .onMapCameraChange(frequency: .onEnd) { context in
+                    viewModel.mapCenter = context.region.center
+                    Task {
+                        await weatherManager.fetch(
+                            for: context.region.center,
+                            updating: viewModel
+                        )
+                    }
+                }
+                .task {
+                    // Fetch weather pertama kali saat app buka
+                    await weatherManager.fetch(for: viewModel.mapCenter, updating: viewModel)
+                }
+
+                // Tap peta → reverse geocode → pin + buka detail sheet
                 .onTapGesture { screenPoint in
                     guard let coordinate = proxy.convert(screenPoint, from: .local) else { return }
                     viewModel.tappedCoordinate = coordinate
-                    Task { await fetchPlace(at: coordinate) }
+                    Task { await handleMapTap(at: coordinate) }
                 }
 
-                // FIX: Deteksi user geser peta manual → reset tracking ke .none (behavior #2)
-                // positionedByUser = true hanya saat USER yang geser, bukan saat kita set programatically
+                // User geser manual → reset tracking
                 .onChange(of: viewModel.cameraPosition) { _, position in
-                    if position.positionedByUser {
-                        viewModel.onUserManualPan()
-                    }
+                    if position.positionedByUser { viewModel.onUserManualPan() }
                 }
 
-                // Lokasi pertama tersedia → fetch weather
+                // Lokasi user tersedia → update mapCenter
                 .onChange(of: locationManager.coordinate?.latitude) { _, _ in
                     guard let coord = locationManager.coordinate else { return }
-                    Task { await weatherManager.fetch(for: coord, updating: viewModel) }
+                    Task {
+                        await weatherManager.fetch(for: coord, updating: viewModel)
+                    }
                 }
             }
 
-            // MARK: Layer 2 — SwiftUI Overlay Controls
-            // FIX: Pass locationManager agar MapOverlayView bisa akses headingDegrees untuk kompas
-            MapOverlayView(
-                viewModel: viewModel,
-                mapScope: mapScope
-            )
+            // SwiftUI overlay (header + bottom bar + tombol)
+            MapOverlayView(viewModel: viewModel, mapScope: mapScope)
         }
         .mapScope(mapScope)
-        .mapItemDetailSheet(item: $viewModel.selectedMapItem)
+
+        // Sheet: Search
+        .sheet(isPresented: $viewModel.showSearch) {
+            SearchSheet(
+                center: viewModel.mapCenter,
+                bookmarks: $viewModel.bookmarks
+            ) { place in
+                viewModel.select(place)
+            }
+            .presentationDetents([.medium, .large])
+        }
+
+        // Sheet: Analysis Result
+        .sheet(item: $viewModel.selectedPlace) { place in
+            AnalysisResultSheet(place: place, weatherManager: weatherManager)
+                .presentationDetents([.height(380), .large])
+                .presentationDragIndicator(.visible)
+                .presentationBackgroundInteraction(.enabled(upThrough: .height(380)))
+        }
+
         .onAppear {
             locationManager.requestPermission()
-            // FIX: Mulai heading updates saat view muncul
-            // (backup — sebenarnya sudah dipanggil dari dalam delegate setelah izin granted)
             locationManager.startHeadingUpdates()
         }
     }
 
-    // MARK: - POI Search + Reverse Geocoding
+    // MARK: - Tap handler: ReverseGeocodeService (CLGeocoder, locale id_ID)
 
-    private func fetchPlace(at coordinate: CLLocationCoordinate2D) async {
-        let request = MKLocalPointsOfInterestRequest(center: coordinate, radius: 50)
-
-        do {
-            let response = try await MKLocalSearch(request: request).start()
-            let nearest = response.mapItems.min {
-                distanceBetween(coordinate, $0.location.coordinate) <
-                distanceBetween(coordinate, $1.location.coordinate)
-            }
-            if let nearest {
-                viewModel.selectedMapItem = nearest
-                return
-            }
-        } catch { }
-
-        await fetchAddress(at: coordinate)
-    }
-
-    private func fetchAddress(at coordinate: CLLocationCoordinate2D) async {
-        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        guard let request = MKReverseGeocodingRequest(location: location) else { return }
-        do {
-            viewModel.selectedMapItem = try await request.mapItems.first
-        } catch {
-            print("[MapContainerView] Geocoding Failed: \(error.localizedDescription)")
+    private func handleMapTap(at coordinate: CLLocationCoordinate2D) async {
+        let origin = locationManager.coordinate ?? viewModel.mapCenter
+        guard let place = await ReverseGeocodeService.place(
+            at: coordinate,
+            from: origin
+        ) else { return }
+        await MainActor.run {
+            viewModel.pinnedPlace  = place
+            viewModel.selectedPlace = place
         }
-    }
-
-    private func distanceBetween(_ a: CLLocationCoordinate2D, _ b: CLLocationCoordinate2D) -> CLLocationDistance {
-        CLLocation(latitude: a.latitude, longitude: a.longitude)
-            .distance(from: CLLocation(latitude: b.latitude, longitude: b.longitude))
     }
 }
 

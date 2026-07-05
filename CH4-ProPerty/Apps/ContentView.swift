@@ -7,17 +7,31 @@
 
 import SwiftUI
 
+/// Root view: Splash (1.8s) → fade → MapContainerView.
 struct ContentView: View {
+
+    @State private var isShowingSplash = true
+
     var body: some View {
-        // Kanvas utama aplikasi kita sekarang sudah terenkapsulasi rapi di sini
-        MapContainerView()
-            // Di masa depan, jika kamu punya elemen global seperti
-            // Custom Toast, Global Alert, atau App-wide State (EnvironmentObject),
-            // kamu bisa menaruh modifier-nya di level ini.
+        ZStack {
+            // Peta utama selalu ada di bawah, hanya opacity-nya yang berubah
+            MapContainerView()
+                .opacity(isShowingSplash ? 0 : 1)
+
+            if isShowingSplash {
+                SplashView()
+                    .transition(.opacity)
+            }
+        }
+        .task {
+            try? await Task.sleep(for: .seconds(1.8))
+            withAnimation(.easeOut(duration: 0.5)) {
+                isShowingSplash = false
+            }
+        }
     }
 }
 
-// MARK: - Preview
 #Preview {
     ContentView()
 }
