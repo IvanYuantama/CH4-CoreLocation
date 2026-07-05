@@ -20,9 +20,10 @@ We think we'll end up using:
 - CoreLocation for capturing the user's GPS coordinates
 - GeoToolbox for surfacing location details such as place names, Google Maps links, and nearby point-of-interest information at a tapped coordinate
 - WeatherKit for capturing variables like temperature, humidity, etc
+- FoundationModels to make a summary based on provided data. 
 
 Because:
-MapKit and CoreLocation are the standard Apple pairing for anything location based, so they felt like the obvious fit from the start. We assumed MapKit alone would not be enough to surface rich location metadata like formatted addresses and map links, so GeoToolbox seemed like a necessary addition. We use WeatherKit to get real time variable data so it can be more additional data.
+MapKit and CoreLocation are the standard Apple pairing for anything location based, so they felt like the obvious fit from the start. We assumed MapKit alone would not be enough to surface rich location metadata like formatted addresses and map links, so GeoToolbox seemed like a necessary addition. We use WeatherKit to get real time variable data so it can be more additional data. After fetching data, we want FoundationModels to generate a brief summary to be shown before each detailed data. 
 
 ---
 
@@ -42,12 +43,14 @@ _Not your conclusion, your actual process. Update this as you go, it doesn't nee
 - An `MKCoordinateRegion` binding that re-centers the map whenever the user's coordinate updates.
 - A reverse geocoding flow using `CLGeocoder.reverseGeocodeLocation()` that populates a detail card with a formatted address and a Maps link via `MKMapItem`.
 - A WeatherModel class using `WeatherService.shared.weather(for:)` that fetches current temperature, humidity, precipitation, and UV index for the selected coordinate, requiring the WeatherKit capability to be activated on an Apple Developer account.
+- A `LanguageModelSession` class from `FoundationModels` to make a summary with a sets of `instruction`.
 - A PostGIS + Express.js backend (`/api/analyze`) returning raw property's risk data for any coordinate, The data contain like flood zones, air quality, temperature, elevation, population density, green spaces, road access, public facilities, internet connectivity, and crime statistics.
 
 **What we discovered that we didn't expect:**
 
 - Supabase free tier no longer exposes a direct PostgreSQL connection for new projects, routing all traffic through PgBouncer in transaction pooling mode. This caused abnormally high query planning times and overall API response times of 8–10 seconds.
 - Migrating the database to Neon resolved the direct connection issue and brought API response time down to under 2 seconds.
+- The `FoundationModels` still not provide model for Bahasa Indonesia. 
 
 ---
 
@@ -61,11 +64,19 @@ Using `GeoToolBox` as the primary framework for surfacing location details at a 
 **We dropped it because:**
 After exploring MapKit more thoroughly, we found that `MKMapItem` already provides a complete point description including place name, address, and a direct deep link to Apple Maps with no external dependency required.
 
+
 **We considered:**
 Keeping Supabase as the long term database host, since it was already in use during early development.
 
 **We dropped it because:**
 Supabase free tier removed direct PostgreSQL connections for new projects, forcing all traffic through PgBouncer in transaction pooling mode. This disabled prepared statement caching and inflated query planning time from the expected ~2ms to ~48ms per query, making the API too slow for our app loading. We migrated to NeonDB, which provides direct connections and full PostGIS support on the free tier.
+
+
+**We considered:**
+Using `FoundationModels` to make a summary. 
+
+**We dropped it because:**
+We tried the `FoundationModels`, but it only works when our device (Iphone 17) is using English as it's general system languange. From what we found, `FoundationModels` has several language it currently support, but Indonesia wasn't on the list. We did tried with several other language on the list as our general system language, but the model also didn't work. For as long as we've tested, the `FoundationModels` only work when the general system language is English. We then thought to only use this model when the device language is English and replace it with a template when other language is used, but then we come to a sense like "Why not just use a template for every device language and not use an AI model to make a summary?"
 
 ---
 
