@@ -61,8 +61,6 @@ Using `GeoToolBox` as the primary framework for surfacing location details at a 
 **We dropped it because:**
 After exploring MapKit more thoroughly, we found that `MKMapItem` already provides a complete point description including place name, address, and a direct deep link to Apple Maps with no external dependency required.
 
----
-
 **We considered:**
 Keeping Supabase as the long term database host, since it was already in use during early development.
 
