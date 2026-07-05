@@ -70,7 +70,7 @@ enum PlaceSearchService {
             let subtitle = subtitleParts.filter { seen.insert($0).inserted }.joined(separator: ", ")
 
             return PlaceResult(
-                name: item.name ?? NSLocalizedString("Unnamed", comment: ""),
+                name: item.name ?? AppLanguage.string("Unnamed"),
                 subtitle: subtitle,
                 latitude: coordinate.latitude,
                 longitude: coordinate.longitude,
@@ -100,9 +100,9 @@ struct PlaceIntel {
 
     /// Paragraf fallback (non-AI), ter-lokalisasi lewat template di Localizable.xcstrings.
     var overview: String {
-        func localized(_ key: String) -> String { NSLocalizedString(key, comment: "") }
+        func localized(_ key: String) -> String { AppLanguage.string(key) }
         return String(
-            format: NSLocalizedString("overview_template", comment: ""),
+            format: AppLanguage.string("overview_template"),
             String(facilityCount),
             String(waterQuality),
             localized(airQualityLevel).lowercased(),
@@ -166,7 +166,7 @@ final class LocationManager: NSObject, ObservableObject {
         case .notDetermined:
             manager.requestWhenInUseAuthorization()
         case .restricted, .denied:
-            errorMessage = NSLocalizedString("Location permission denied. Enable it in Settings.", comment: "")
+            errorMessage = AppLanguage.string("Location permission denied. Enable it in Settings.")
         default:
             manager.startUpdatingLocation()
         }
@@ -195,7 +195,7 @@ extension LocationManager: CLLocationManagerDelegate {
     nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         Task { @MainActor in
             self.errorMessage = String(
-                format: NSLocalizedString("Failed to get location: %@", comment: ""),
+                format: AppLanguage.string("Failed to get location: %@"),
                 error.localizedDescription
             )
         }
@@ -308,7 +308,7 @@ enum ReverseGeocodeService {
         let name = placemark.name
             ?? placemark.subLocality
             ?? placemark.locality
-            ?? NSLocalizedString("Selected location", comment: "")
+            ?? AppLanguage.string("Selected location")
         let subtitleParts = [
             placemark.subLocality,
             placemark.locality,
@@ -345,13 +345,30 @@ enum OverviewAI {
     enum Outcome {
         case direct(String)
         case needsTranslation(String)
-        case unavailable
+        case unavailable(String?)   // alasan gagal, untuk diagnostik UI
     }
 
     /// Muat model ke memori lebih awal supaya request pertama tidak lambat.
     static func prewarm() {
         guard case .available = SystemLanguageModel.default.availability else { return }
         LanguageModelSession(model: .default).prewarm(promptPrefix: nil)
+    }
+
+    /// Alasan model tidak tersedia (untuk ditampilkan sebagai diagnostik).
+    /// Nil kalau model tersedia.
+    static func availabilityNote() -> String? {
+        switch SystemLanguageModel.default.availability {
+        case .available:
+            return nil
+        case .unavailable(.deviceNotEligible):
+            return "Device ini tidak mendukung Apple Intelligence."
+        case .unavailable(.appleIntelligenceNotEnabled):
+            return "Apple Intelligence belum aktif. Nyalakan di Settings → Apple Intelligence & Siri. Catatan: bahasa SISTEM harus bahasa yang didukung (mis. English) — kalau bahasa sistem Indonesia, Apple Intelligence mati otomatis."
+        case .unavailable(.modelNotReady):
+            return "Model AI sedang diunduh / belum siap. Coba lagi beberapa menit."
+        case .unavailable(let other):
+            return "Model AI tidak tersedia: \(String(describing: other))"
+        }
     }
 
     /// Rangkum parameter wilayah. Teks parsial dikirim lewat onPartial (streaming),
@@ -362,11 +379,15 @@ enum OverviewAI {
         intel: PlaceIntel,
         preferIndonesian: Bool,
         allowDirectIndonesian: Bool,
-        onPartial: (String) -> Void
+        onPartial: @escaping (String) -> Void
     ) async -> Outcome {
-        guard case .available = SystemLanguageModel.default.availability else { return .unavailable }
+        guard case .available = SystemLanguageModel.default.availability else {
+            return .unavailable(availabilityNote())
+        }
 
+        print("[OverviewAI] start\n\(debugDump())")
         let prompt = promptText(placeName: placeName, subtitle: subtitle, intel: intel)
+        print("[OverviewAI] prompt:\n\(prompt)")
 
         // Jalur 1: minta Bahasa Indonesia langsung (best-effort — id belum resmi didukung).
         if preferIndonesian && allowDirectIndonesian {
@@ -380,25 +401,110 @@ enum OverviewAI {
         do {
             let english = try await generate(prompt: prompt, inIndonesian: false, onPartial: onPartial)
             guard !english.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                return .unavailable
+                print("[OverviewAI] EN generation returned EMPTY")
+                return .unavailable("Model mengembalikan teks kosong.")
             }
+            print("[OverviewAI] EN generation OK (\(english.count) chars)")
             return preferIndonesian ? .needsTranslation(english) : .direct(english)
         } catch {
-            return .unavailable
+            print("[OverviewAI] EN generation FAILED: \(error)")
+            if error is TimeoutError {
+                // Streaming macet — coba sekali lewat jalur non-streaming.
+                print("[OverviewAI] mencoba fallback non-streaming respond()")
+                if let fallback = try? await respondOnce(prompt: prompt, inIndonesian: false),
+                   !fallback.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    print("[OverviewAI] respond() OK (\(fallback.count) chars)")
+                    onPartial(fallback)
+                    return preferIndonesian ? .needsTranslation(fallback) : .direct(fallback)
+                }
+                return .unavailable(
+                    "Model tidak merespons (streaming & non-streaming sama-sama timeout). "
+                    + "Kemungkinan daemon Apple Intelligence macet: restart iPhone, "
+                    + "lalu cek Settings → Apple Intelligence & Siri — pastikan tidak ada model yang masih download."
+                )
+            }
+            var reason = describe(error)
+            if let generationError = error as? LanguageModelSession.GenerationError,
+               case .unsupportedLanguageOrLocale = generationError {
+                // Probe: bedakan "SEMUA request ditolak" (locale app) vs
+                // "cuma prompt kita yang ditolak" (konten, mis. nama tempat).
+                let probeSucceeded = await probeEnglish()
+                print("[OverviewAI] plain-English probe = \(probeSucceeded)")
+                reason += probeSucceeded
+                    ? "\n→ Probe Inggris polos BERHASIL: yang ditolak konten prompt (kemungkinan nama tempat)."
+                    : "\n→ Probe Inggris polos juga DITOLAK: locale app masih tidak didukung — cek Settings → Apps → ProPerty → Language harus English/default."
+                reason += "\nlocale=\(Locale.current.identifier)"
+            }
+            return .unavailable(reason)
+        }
+    }
+
+    /// Prompt Inggris paling polos — kalau ini pun ditolak, masalahnya locale, bukan konten.
+    private static func probeEnglish() async -> Bool {
+        let session = LanguageModelSession(
+            model: .default,
+            instructions: "You reply with a single English word."
+        )
+        let result = try? await session.respond(to: "Reply with the word: hello")
+        return !(result?.content.isEmpty ?? true)
+    }
+
+    /// Info locale + bahasa yang didukung model, untuk console Xcode.
+    private static func debugDump() -> String {
+        let supported = SystemLanguageModel.default.supportedLanguages
+            .map { "\($0.languageCode?.identifier ?? "?")\($0.region.map { "-\($0.identifier)" } ?? "")" }
+            .sorted()
+            .joined(separator: ", ")
+        return """
+        Locale.current = \(Locale.current.identifier)
+        preferredLanguages = \(Locale.preferredLanguages.joined(separator: ", "))
+        model.supportedLanguages = [\(supported)]
+        """
+    }
+
+    /// Terjemahkan error FoundationModels jadi pesan diagnostik yang bisa dibaca.
+    private static func describe(_ error: Error) -> String {
+        if error is TimeoutError {
+            return "Model tidak merespons dalam \(generationTimeoutSeconds) detik (timeout). "
+                + "Coba tutup-buka kartu; kalau berulang, restart app / device."
+        }
+        guard let generationError = error as? LanguageModelSession.GenerationError else {
+            return "Generate gagal: \(error.localizedDescription)"
+        }
+        switch generationError {
+        case .guardrailViolation:
+            return "Kena guardrail keamanan konten Apple — sebagian isi prompt dianggap sensitif."
+        case .exceededContextWindowSize:
+            return "Prompt melebihi kapasitas konteks model."
+        case .unsupportedLanguageOrLocale:
+            return "Bahasa/locale prompt tidak didukung model."
+        case .assetsUnavailable:
+            return "Aset model belum tersedia di device."
+        case .rateLimited:
+            return "Terlalu banyak request — kena rate limit, coba lagi."
+        case .concurrentRequests:
+            return "Masih ada request lain yang berjalan."
+        case .refusal:
+            return "Model menolak merangkum konten ini."
+        default:
+            return "Generate gagal: \(generationError.localizedDescription)"
         }
     }
 
     // MARK: - Private
 
-    private static func generate(
-        prompt: String,
-        inIndonesian: Bool,
-        onPartial: (String) -> Void
-    ) async throws -> String {
+    /// Batas tunggu generate — stream Foundation Models kadang macet
+    /// sebelum snapshot pertama; tanpa batas ini UI loading selamanya.
+    /// (Token pertama normalnya < 5 detik; 30 detik sudah sangat longgar.)
+    private static let generationTimeoutSeconds = 30
+
+    struct TimeoutError: Error {}
+
+    private static func makeSession(inIndonesian: Bool) -> LanguageModelSession {
         let languageLine = inIndonesian
             ? "Write the paragraph in Bahasa Indonesia."
             : "Write the paragraph in English."
-        let session = LanguageModelSession(
+        return LanguageModelSession(
             model: .default,
             instructions: """
             You are a property-location analyst. Summarize the given area parameters \
@@ -407,24 +513,77 @@ enum OverviewAI {
             \(languageLine)
             """
         )
-        var latest = ""
-        let stream = session.streamResponse(to: prompt)
-        for try await snapshot in stream {
-            latest = snapshot.content
-            onPartial(latest)
-        }
-        return latest
     }
 
+    /// Jalur cadangan non-streaming — dipakai saat jalur streaming timeout.
+    private static func respondOnce(prompt: String, inIndonesian: Bool) async throws -> String {
+        let session = makeSession(inIndonesian: inIndonesian)
+        let request = Task { @MainActor () throws -> String in
+            try await session.respond(to: prompt).content
+        }
+        let watchdog = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(generationTimeoutSeconds))
+            print("[OverviewAI] WATCHDOG: respond() \(generationTimeoutSeconds)s tanpa hasil — cancel")
+            request.cancel()
+        }
+        defer { watchdog.cancel() }
+        do {
+            return try await request.value
+        } catch is CancellationError {
+            throw TimeoutError()
+        }
+    }
+
+    private static func generate(
+        prompt: String,
+        inIndonesian: Bool,
+        onPartial: @escaping (String) -> Void
+    ) async throws -> String {
+        let session = makeSession(inIndonesian: inIndonesian)
+
+        let generation = Task { @MainActor () throws -> String in
+            var latest = ""
+            var snapshots = 0
+            print("[OverviewAI] stream begin (indonesian=\(inIndonesian))")
+            let stream = session.streamResponse(to: prompt)
+            for try await snapshot in stream {
+                snapshots += 1
+                if snapshots == 1 { print("[OverviewAI] first snapshot received") }
+                latest = snapshot.content
+                onPartial(latest)
+            }
+            print("[OverviewAI] stream done: \(snapshots) snapshots, \(latest.count) chars")
+            // Stream yang di-cancel watchdog bisa berakhir "sukses" dengan 0
+            // snapshot — pastikan itu dilaporkan sebagai timeout, bukan kosong.
+            try Task.checkCancellation()
+            return latest
+        }
+        let watchdog = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(generationTimeoutSeconds))
+            print("[OverviewAI] WATCHDOG: \(generationTimeoutSeconds)s tanpa hasil — cancel stream")
+            generation.cancel()
+        }
+        defer { watchdog.cancel() }
+        do {
+            return try await generation.value
+        } catch is CancellationError {
+            throw TimeoutError()
+        }
+    }
+
+    /// PENTING: prompt TIDAK boleh memuat nama tempat/subtitle Indonesia —
+    /// detektor bahasa model membaca "Kecamatan/Kabupaten/…" sebagai bahasa id
+    /// dan menolak seluruh request ("Unsupported language id detected").
+    /// Nama tempat sudah tampil di header UI, jadi cukup "this area" di prompt.
     private static func promptText(placeName: String, subtitle: String, intel: PlaceIntel) -> String {
         """
-        Area: \(placeName), \(subtitle)
+        Area: a residential area in Indonesia (refer to it as "this area")
         Average temperature: \(String(format: "%.1f", intel.avgTemp))°C (level: \(intel.temperatureLevel))
         Flood risk: \(intel.floodRisk)
         Air quality: \(intel.airQualityLevel) (AQI \(intel.aqi))
         Water quality: \(intel.waterQuality)/100
         Elevation: \(intel.elevation) m above sea level
-        Crime rate: \(intel.crimeLevel)
+        Neighborhood safety: \(intel.crimeLevel == "Low" ? "generally safe" : "moderately safe")
         Green space: \(intel.greenPercent)% (\(intel.greenSpaces))
         Road access: \(intel.roadAccess)
         Public facilities within 2 km: \(intel.facilityCount)

@@ -9,13 +9,44 @@ struct ProPertyApp: App {
     }
 }
 
+/// Bahasa app dipilih DI DALAM app (bukan lewat Settings iOS).
+/// Alasan: kalau bahasa app di-set ke Indonesia lewat Settings, Locale proses
+/// jadi "id" dan Foundation Models menolak SEMUA request
+/// (unsupportedLanguageOrLocale). Dengan toggle internal, locale proses tetap
+/// bahasa sistem (didukung model), sedangkan UI dipaksa lewat .environment(\.locale).
+enum AppLanguage {
+    static let storageKey = "appLanguage"
+
+    static var defaultValue: String {
+        Locale.current.language.languageCode?.identifier == "id" ? "id" : "en"
+    }
+
+    static var isIndonesian: Bool {
+        (UserDefaults.standard.string(forKey: storageKey) ?? defaultValue) == "id"
+    }
+
+    /// Lookup string dari lproj bahasa terpilih (pengganti NSLocalizedString,
+    /// yang selalu mengikuti locale proses).
+    static func string(_ key: String) -> String {
+        let language = UserDefaults.standard.string(forKey: storageKey) ?? defaultValue
+        guard let path = Bundle.main.path(forResource: language, ofType: "lproj"),
+              let bundle = Bundle(path: path) else {
+            return NSLocalizedString(key, comment: "")
+        }
+        return bundle.localizedString(forKey: key, value: key, table: nil)
+    }
+}
+
 /// Splash → peta utama.
 struct RootView: View {
     @State private var isShowingSplash = true
+    @AppStorage(AppLanguage.storageKey) private var appLanguage = AppLanguage.defaultValue
 
     var body: some View {
         ZStack {
             MainMapView()
+                .environment(\.locale, Locale(identifier: appLanguage))
+                .id(appLanguage)   // rebuild penuh saat bahasa diganti
                 .opacity(isShowingSplash ? 0 : 1)
             if isShowingSplash {
                 SplashView()

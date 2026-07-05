@@ -1,6 +1,5 @@
 import SwiftUI
 import MapKit
-import Translation
 
 // MARK: - Layar peta utama
 
@@ -40,10 +39,6 @@ struct MainMapView: View {
         }
         .task {
             weather.loadIfNeeded(for: mapCenter)
-            // Panaskan model AI sejak awal biar ringkasan pertama tidak lambat.
-            if #available(iOS 26.0, *) {
-                OverviewAI.prewarm()
-            }
         }
         .onTapGesture { screenPoint in
             guard let coordinate = proxy.convert(screenPoint, from: .local) else { return }
@@ -76,10 +71,27 @@ struct MainMapView: View {
 
     // MARK: Header (logo + chip cuaca mock)
 
+    @AppStorage(AppLanguage.storageKey) private var appLanguage = AppLanguage.defaultValue
+
     private var header: some View {
         VStack(alignment: .leading, spacing: 10) {
-            (Text("Pro").foregroundColor(Theme.primary) + Text("Perty").foregroundColor(.black))
-                .font(.system(size: 20, weight: .heavy, design: .rounded))
+            HStack {
+                (Text("Pro").foregroundColor(Theme.primary) + Text("Perty").foregroundColor(.black))
+                    .font(.system(size: 20, weight: .heavy, design: .rounded))
+                Spacer()
+                // Toggle bahasa in-app (jangan lewat Settings iOS — mematikan AI).
+                Button {
+                    appLanguage = (appLanguage == "id") ? "en" : "id"
+                } label: {
+                    Text(appLanguage == "id" ? "🇮🇩 ID" : "🇺🇸 EN")
+                        .font(.caption.weight(.bold))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(.white.opacity(0.95), in: Capsule())
+                        .shadow(color: .black.opacity(0.08), radius: 3, y: 1)
+                }
+                .buttonStyle(.plain)
+            }
             HStack(spacing: 8) {
                 weatherChip("sun.max.fill", weather.snapshot?.temperature ?? "—", .orange)
                 weatherChip("drop.fill", weather.snapshot?.precipitation ?? "—", .blue)
@@ -277,13 +289,13 @@ struct SearchSheet: View {
                 results = found
                 if found.isEmpty {
                     errorMessage = String(
-                        format: NSLocalizedString("No results for \"%@\".", comment: ""),
+                        format: AppLanguage.string("No results for \"%@\"."),
                         completion.title
                     )
                 }
             } catch {
                 errorMessage = String(
-                    format: NSLocalizedString("Search failed: %@", comment: ""),
+                    format: AppLanguage.string("Search failed: %@"),
                     error.localizedDescription
                 )
             }
@@ -300,13 +312,13 @@ struct SearchSheet: View {
                 results = found
                 if found.isEmpty {
                     errorMessage = String(
-                        format: NSLocalizedString("No results for \"%@\".", comment: ""),
+                        format: AppLanguage.string("No results for \"%@\"."),
                         query
                     )
                 }
             } catch {
                 errorMessage = String(
-                    format: NSLocalizedString("Search failed: %@", comment: ""),
+                    format: AppLanguage.string("Search failed: %@"),
                     error.localizedDescription
                 )
             }
@@ -368,20 +380,9 @@ struct PlaceDetailView: View {
     let place: PlaceResult
     @Environment(\.dismiss) private var dismiss
 
-    @State private var aiOverview: String?
-    @State private var translatedOverview: String?
-    @State private var isSummarizing = false
-    @State private var isTranslating = false
-    @State private var translationConfig: TranslationSession.Configuration?
-
-    // Sekali jalur "minta Indonesia langsung" gagal di device ini, langsung
-    // pakai jalur EN + translate di run berikutnya (hindari generate dua kali).
-    @AppStorage("directIndonesianFailed") private var directIndonesianFailed = false
-
-    private var intel: PlaceIntel { .mock(for: place.coordinate) }
-    private var prefersIndonesian: Bool {
-        Locale.current.language.languageCode?.identifier == "id"
-    }
+    /// Data area dari property-backend + AQI Open-Meteo + suhu realtime WeatherKit.
+    /// nil = masih loading.
+    @State private var intel: PropertyIntel?
 
     var body: some View {
         ScrollView {
@@ -419,114 +420,112 @@ struct PlaceDetailView: View {
                 miniMap
 
                 section("Overview") {
-                    // Teks tampil sambil di-stream (aiOverview terisi progresif).
-                    Text(translatedOverview ?? aiOverview ?? (isSummarizing ? "" : intel.overview))
-                        .font(.caption)
-                        .foregroundStyle(.primary)
-                        .lineSpacing(3)
-                    if isSummarizing && (aiOverview ?? "").isEmpty {
+                    if let intel {
+                        // Template ter-lokalisasi, parameter dari data backend.
+                        Text(intel.overviewText)
+                            .font(.caption)
+                            .foregroundStyle(.primary)
+                            .lineSpacing(3)
+                        if let district = intel.district {
+                            Label(district, systemImage: "mappin.and.ellipse")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                        if intel.isSample {
+                            Label("Backend unreachable — showing sample data", systemImage: "exclamationmark.triangle")
+                                .font(.caption2)
+                                .foregroundStyle(.orange)
+                        }
+                    } else {
                         HStack(spacing: 8) {
                             ProgressView()
-                            Text("Summarizing with Apple Intelligence…")
+                            Text("Loading area data…")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    if isTranslating {
-                        HStack(spacing: 8) {
-                            ProgressView()
-                            Text("Translating…")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                }
+
+                if let intel {
+                    Text("Details")
+                        .font(.headline)
+
+                    section("Environment") {
+                        metricGrid([
+                            ("Temperature", tempMetric(intel), "thermometer.medium"),
+                            ("Flood Risk", intel.floodRisk, "water.waves"),
+                            ("Air Quality", airMetric(intel), "wind"),
+                            ("Elevation", intel.elevation, "mountain.2.fill")
+                        ])
+                    }
+
+                    section("Accessibilities") {
+                        metricGrid([
+                            ("Green Spaces (≤500 m)", greenMetric(intel), "leaf.fill"),
+                            ("Main Road", intel.mainRoadText, "road.lanes"),
+                            ("WiFi", wifiMetric(intel), "wifi"),
+                            ("Mobile Data", intel.mobile ?? "—", "antenna.radiowaves.left.and.right"),
+                            ("Population", intel.population.map { $0.formatted() } ?? "—", "person.3.fill"),
+                            ("Crime Cases", intel.crimeTotal.map { $0.formatted() } ?? "—", "shield.lefthalf.filled")
+                        ])
+                    }
+
+                    if !intel.facilities.isEmpty {
+                        section("Public Facilities (≤1 km)") {
+                            VStack(alignment: .leading, spacing: 6) {
+                                ForEach(intel.facilities) { facility in
+                                    HStack {
+                                        Image(systemName: "building.2.fill")
+                                            .font(.caption2)
+                                            .foregroundStyle(Theme.primary)
+                                        Text("\(facility.category) ×\(facility.count)")
+                                            .font(.caption)
+                                        Spacer()
+                                        Text(formatMeters(facility.distanceM))
+                                            .font(.caption.weight(.semibold))
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                            }
                         }
                     }
-                    if !isSummarizing && !isTranslating && (translatedOverview ?? aiOverview) != nil {
-                        Label("Summarized on-device by Apple Intelligence", systemImage: "sparkles")
-                            .font(.caption2)
-                            .foregroundStyle(Theme.primary)
-                    }
+
+                    Text(intel.isSample
+                        ? "Source: sample dataset (backend offline)"
+                        : "Source: CH4 property-backend · Open-Meteo AQI · WeatherKit")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
                 }
-
-                Text("Details")
-                    .font(.headline)
-
-                section("Environment") {
-                    metricGrid([
-                        ("Temperature", intel.temperatureLevel, "thermometer.medium"),
-                        ("Flood Risk", intel.floodRisk, "water.waves"),
-                        ("Air Quality", intel.airQualityLevel, "wind")
-                    ])
-                }
-
-                section("Accessibilities") {
-                    metricGrid([
-                        ("Green Spaces", intel.greenSpaces, "leaf.fill"),
-                        ("Road Access", intel.roadAccess, "road.lanes"),
-                        ("Pub. Facilities", "School", "building.2.fill"),
-                        ("Pub. Facilities", "Hospital", "cross.case.fill")
-                    ])
-                }
-
-                Text("Environment data above is still mocked (prototype).")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
             }
             .padding(20)
         }
         .presentationDragIndicator(.visible)
-        .translationTask(translationConfig) { session in
-            guard let source = aiOverview else {
-                isTranslating = false
-                return
-            }
-            do {
-                let response = try await session.translate(source)
-                translatedOverview = response.targetText
-            } catch {
-                // Gagal translate → tampilkan teks Inggris apa adanya.
-                translatedOverview = nil
-            }
-            isTranslating = false
-        }
         .task {
-            guard #available(iOS 26.0, *) else { return }
-            isSummarizing = true
-            let outcome = await OverviewAI.summarize(
-                placeName: place.name,
-                subtitle: place.subtitle,
-                intel: intel,
-                preferIndonesian: prefersIndonesian,
-                allowDirectIndonesian: !directIndonesianFailed
-            ) { partial in
-                aiOverview = partial   // streaming: paragraf tampil sambil jadi
-            }
-            isSummarizing = false
-            switch outcome {
-            case .direct(let text):
-                aiOverview = text
-                if prefersIndonesian { directIndonesianFailed = false }
-            case .needsTranslation(let text):
-                directIndonesianFailed = true
-                aiOverview = text
-                startTranslation()
-            case .unavailable:
-                aiOverview = nil   // fallback: template lokal ter-lokalisasi
-            }
+            intel = await IntelService.load(for: place.coordinate)
         }
     }
 
-    /// Pemicu translate yang bisa diulang — assign config bernilai sama tidak
-    /// me-retrigger .translationTask, harus invalidate().
-    private func startTranslation() {
-        isTranslating = true
-        if translationConfig == nil {
-            translationConfig = .init(
-                source: .init(identifier: "en"),
-                target: .init(identifier: "id")
-            )
-        } else {
-            translationConfig?.invalidate()
-        }
+    /// "Cool · 27°C" — zona dari backend + suhu realtime WeatherKit.
+    private func tempMetric(_ intel: PropertyIntel) -> String {
+        intel.currentTempC.map { "\(intel.temperatureZone) · \($0)°C" } ?? intel.temperatureZone
+    }
+
+    /// "Good · AQI 42" — klasifikasi backend + AQI realtime Open-Meteo.
+    private func airMetric(_ intel: PropertyIntel) -> String {
+        intel.aqi.map { "\(intel.airQuality) · AQI \($0)" } ?? intel.airQuality
+    }
+
+    /// "Dense · 3 zones" — kelas RTH dominan dalam 500 m + jumlah zonanya.
+    private func greenMetric(_ intel: PropertyIntel) -> String {
+        guard intel.greenZoneCount > 0 else { return "—" }
+        return "\(intel.greenDominant) · \(intel.greenZoneCount)z"
+    }
+
+    /// "69 / 53 Mbps · 800 m" — jarak muncul kalau datanya dari zona terdekat.
+    private func wifiMetric(_ intel: PropertyIntel) -> String {
+        guard let wifi = intel.wifi else { return "—" }
+        guard let distance = intel.wifiDistanceM, distance > 0 else { return wifi }
+        return "\(wifi) · \(formatMeters(distance))"
     }
 
     private var miniMap: some View {
