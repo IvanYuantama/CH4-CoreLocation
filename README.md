@@ -16,7 +16,7 @@ _What did you assume, before any real exploration (start of investigation phase)
 
 We think we'll end up using:
 
-- MapKit for rendering the property map and displaying pins
+- MapKit for rendering the map and displaying pins
 - CoreLocation for capturing the user's GPS coordinates
 - GeoToolbox for surfacing location details such as place names, Maps links, and nearby point-of-interest information at a tapped coordinate
 - WeatherKit for capturing variables like temperature, humidity, etc
@@ -44,7 +44,7 @@ _Not your conclusion, your actual process. Update this as you go, it doesn't nee
 - A reverse geocoding flow using `CLGeocoder.reverseGeocodeLocation()` that populates a detail card with a formatted address and a Maps link via `MKMapItem`.
 - A WeatherModel class using `WeatherService.shared.weather(for:)` that fetches current temperature, humidity, precipitation, and UV index for the selected coordinate, requiring the WeatherKit capability to be activated on an Apple Developer account.
 - A `LanguageModelSession` class from `FoundationModels` to make a summary with a sets of `instruction`.
-- A PostGIS + Express.js backend (`/api/analyze`) returning raw property's risk data for any coordinate, The data contain like flood zones, air quality, temperature, elevation, population density, green spaces, road access, public facilities, internet connectivity, and crime statistics.
+- A PostGIS + Express.js backend to give the data geojson.
 
 **What we discovered that we didn't expect:**
 
@@ -84,7 +84,7 @@ We tried the `FoundationModels`, but it only works when our device (Iphone 17) i
 
 **Situation 1: Supabase pooler inflating PostGIS planning time**
 
-The `/api/analyze` endpoint was consistently taking 8–10 seconds per request even with GIST spatial indexes on all geometry columns. Running `EXPLAIN ANALYZE` revealed query planning time of ~48ms per query, far above the normal 1–5ms, caused by PgBouncer's transaction pooling mode preventing statistics caching between connections.
+The test endpoint was consistently taking 8–10 seconds per request even with GIST spatial indexes on all geometry columns.
 
 How we worked around it:
 We migrated the database from Supabase to Neon, which supports direct PostgreSQL connections on the free tier. Planning time dropped to normal levels and total API response time improved significantly.
@@ -109,7 +109,7 @@ The CoreLocation and MapKit pairing held exactly as assumed, and CLGeocoder (whi
 
 ### About the Frameworks
 
-All three frameworks are genuinely necessary and work together in sequence. CoreLocation provides the coordinate and resolves the address, MapKit consumes that coordinate to render the map and display the surrounding area, WeatherKit consumes that same coordinate to fetch real-time environmental variables (temperature, humidity, precipitation, UV index) that enrich the property overview with live conditions rather than static data alone. Removing any one of them degrades the core use case: without CoreLocation there is no coordinate or address, without MapKit there is no spatial context, and without WeatherKit the property overview is limited to static risk data with no live environmental signal.
+All three frameworks are genuinely necessary and work together in sequence. CoreLocation provides the coordinate and resolves the address, MapKit consumes that coordinate to render the map and display the surrounding area, WeatherKit consumes that same coordinate to fetch real-time environmental variables (temperature, humidity, precipitation, UV index) that enrich the property overview with live conditions rather than static data alone. Removing any one of them degrades the core use case: without CoreLocation there is no coordinate or address, without MapKit there is no spatial context, and without WeatherKit the overview is limited to give data without no live environmental signal.
 
 The challenge response reflects this: _Create an app that utilizes Location Manager for location tracking, Reverse Geocoding for address resolution, Coordinate Regions for map navigation, and WeatherService to to fetch and present environmental conditions data for any selected property._
 
