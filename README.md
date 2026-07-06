@@ -18,7 +18,7 @@ We think we'll end up using:
 
 - MapKit for rendering the property map and displaying pins
 - CoreLocation for capturing the user's GPS coordinates
-- GeoToolbox for surfacing location details such as place names, Google Maps links, and nearby point-of-interest information at a tapped coordinate
+- GeoToolbox for surfacing location details such as place names, Maps links, and nearby point-of-interest information at a tapped coordinate
 - WeatherKit for capturing variables like temperature, humidity, etc
 - FoundationModels to make a summary based on provided data. 
 
