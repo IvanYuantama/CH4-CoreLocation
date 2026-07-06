@@ -17,7 +17,6 @@ class PlaceDetailViewModel: ObservableObject {
     @Published var isTranslating = false
     @Published var translationConfig: TranslationSession.Configuration?
     
-    // State untuk data API ryansafa.cloud
     @Published var intel: PlaceIntel?
     @Published var isFetchingIntel = false
     @Published var errorMessage: String?
@@ -36,12 +35,10 @@ class PlaceDetailViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            // 1. Fetch data riil dari backend
             let fetchedIntel = try await PlaceIntelService.fetchIntel(lat: place.latitude, lng: place.longitude)
             self.intel = fetchedIntel
             self.isFetchingIntel = false
             
-            // 2. Generate summary menggunakan data riil
             await generateSummary(using: fetchedIntel)
             
         } catch {
@@ -49,7 +46,6 @@ class PlaceDetailViewModel: ObservableObject {
             self.errorMessage = error.localizedDescription
             print("API Fetch Failed: \(error.localizedDescription)")
             
-            // Fallback ke mock data sementara jika API sedang down, agar UI tetap bisa di-test
             let mockIntel = PlaceIntel.mock(for: place.coordinate)
             self.intel = mockIntel
             await generateSummary(using: mockIntel)
@@ -83,6 +79,35 @@ class PlaceDetailViewModel: ObservableObject {
         case .unavailable:
             aiOverview = nil
         }
+    }
+    
+    static func preview() -> PlaceDetailViewModel {
+        let vm = PlaceDetailViewModel(place: PlaceResult(
+            name: "Canggu",
+            subtitle: "Kabupaten Badung, Bali, Indonesia",
+            latitude: -8.6478,
+            longitude: 115.1385,
+            distanceKm: 10.0
+        ))
+        vm.intel = PlaceIntel(
+            temperatureLevel: "Low",
+            floodRisk: "High",
+            airQualityLevel: "Medium",
+            greenSpaces: "Dense",
+            roadAccess: "Collector",
+            population: 55352,
+            families: 16798,
+            elevationLevel: "Lowland",
+            crimeLevel: "Low",
+            hasSchool: true,
+            hasHospital: true,
+            hasPolice: true,
+            facilityCount: 28
+        )
+        vm.aiOverview = "This area offers good accessibility with major roads nearby and 28 public facilities within 2 km. Water quality is moderate (72/100), while air quality is fair (AQI 118). The elevation is 35 m above sea level with an average temperature of 27.4°C. A low crime rate and 41% green space support a comfortable environment"
+        vm.isFetchingIntel = false
+        vm.isSummarizing = false
+        return vm
     }
     
     func startTranslation() {

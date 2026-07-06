@@ -15,10 +15,10 @@ struct DataPreferenceView: View {
             VStack(alignment: .leading, spacing: 0) { // Spacing 0 agar Divider merapat
                 HStack {
                     Text("Data Preferences")
-                        .font(Theme.Typography.title)
+                        .font(Theme.Typography.heading)
                         .foregroundColor(Theme.textPrimary)
                     Spacer()
-                    Image(systemName: "message")
+                    Image(systemName: "bubble.left.and.bubble.right")
                         .font(.title2)
                 }
                 .padding(.top, 24)
@@ -26,7 +26,6 @@ struct DataPreferenceView: View {
                 .padding(.bottom, 20)
                 
                 Group {
-                    Divider()
                     PreferenceRadioRow(title: "Temperature", subtitle: "Display the average temperature (Low - High)", isSelected: vm.showTemperature) { vm.showTemperature.toggle() }
                     
                     Divider().padding(.leading, 24)

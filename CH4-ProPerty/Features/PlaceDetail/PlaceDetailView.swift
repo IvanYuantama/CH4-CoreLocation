@@ -15,23 +15,16 @@ struct PlaceDetailView: View {
     
     @StateObject private var vm: PlaceDetailViewModel
     @StateObject private var weather = WeatherManager()
-    @StateObject private var settings = SettingsViewModel()
+    @EnvironmentObject private var settings : SettingsViewModel
     
-    init(place: PlaceResult) {
+    init(place: PlaceResult, previewVM: PlaceDetailViewModel? = nil) {
         self.place = place
-        _vm = StateObject(wrappedValue: PlaceDetailViewModel(place: place))
+        _vm = StateObject(wrappedValue: previewVM ?? PlaceDetailViewModel(place: place))
     }
     
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 20) {
-                // Drag Indicator Tiruan
-                Center {
-                    Capsule()
-                        .fill(Color(UIColor.systemGray4))
-                        .frame(width: 40, height: 4)
-                        .padding(.top, 10)
-                }
                 
                 headerSection
                 
@@ -66,7 +59,7 @@ struct PlaceDetailView: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(place.name)
-                    .font(Theme.Typography.title)
+                    .font(Theme.Typography.heading)
                     .foregroundColor(Theme.textPrimary)
                 
                 Text(place.subtitle)
@@ -78,13 +71,14 @@ struct PlaceDetailView: View {
             
             Button { dismiss() } label: {
                 Image(systemName: "xmark")
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 22, weight: .bold))
                     .foregroundColor(Theme.textPrimary)
-                    .frame(width: 30, height: 30)
+                    .frame(width: 44, height: 44)
                     .background(Theme.cardBackground)
                     .clipShape(Circle())
             }
         }
+        .padding(.top,30)
     }
     
     private var actionAndWeatherRow: some View {
@@ -102,16 +96,33 @@ struct PlaceDetailView: View {
                     .background(Theme.primary)
                     .clipShape(RoundedRectangle(cornerRadius: Theme.cardRadius))
                 }
-                
+
                 if weather.isLoading {
-                    ProgressView().padding(.horizontal)
+                    HStack(spacing: 12) {
+                        ForEach(0..<3, id: \.self) { _ in
+                            Capsule()
+                                .fill(Color(UIColor.systemGray5))
+                                .frame(width: 75, height: 36)
+                        }
+                    }
                 } else if let snap = weather.snapshot {
-                    WeatherChip(icon: "thermometer.sun", label: snap.temperature)
-                    WeatherChip(icon: "drop", label: snap.humidity)
-                    WeatherChip(icon: "sun.max", label: snap.uv)
+                    WeatherChip(icon: snap.weatherSymbol, label: snap.temperature)
+                    WeatherChip(icon: "humidity", label: snap.humidity)
+                    WeatherChip(icon: uvIcon(for: snap.uv), label: snap.uv)
                 }
             }
             .padding(.vertical, 4)
+        }
+    }
+
+    private func uvIcon(for uvLabel: String) -> String {
+        // Parse angka dari "3 UV", "8 UV", dst
+        let value = uvLabel.components(separatedBy: " ").first.flatMap { Int($0) } ?? 0
+        switch value {
+        case 0...2: return "sun.min"
+        case 3...5: return "sun.max"
+        case 6...7: return "sun.max.trianglebadge.exclamationmark"
+        default:    return "sun.max.trianglebadge.exclamationmark.fill"
         }
     }
     
@@ -163,27 +174,23 @@ struct PlaceDetailView: View {
                 .font(Theme.Typography.title)
                 .foregroundColor(Theme.textPrimary)
             
-            // 1. Environment Category
             let envCards = generateEnvironmentCards(intel: intel)
             if !envCards.isEmpty {
                 renderCategory(title: "Environment", cards: envCards)
             }
             
-            // 2. Accessibilities Category
             let accCards = generateAccessibilityCards(intel: intel)
             if !accCards.isEmpty {
                 Divider()
                 renderCategory(title: "Accessibilities", cards: accCards)
             }
             
-            // 3. Social Category
             let socialCards = generateSocialCards(intel: intel)
             if !socialCards.isEmpty {
                 Divider()
                 renderCategory(title: "Social", cards: socialCards)
             }
             
-            // 4. Geography Category
             let geoCards = generateGeographyCards(intel: intel)
             if !geoCards.isEmpty {
                 Divider()
@@ -207,46 +214,185 @@ struct PlaceDetailView: View {
                 .font(Theme.Typography.section)
                 .foregroundColor(Theme.textPrimary)
             
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                // Generate kartu selang-seling berdasarkan indeks
-                ForEach(Array(cards.enumerated()), id: \.element.id) { index, card in
+            let paired = pairCards(cards)
+            
+            VStack(spacing: 0) {
+                ForEach(Array(paired.enumerated()), id: \.offset) { _, row in
+                    if row.right?.isTall == true {
+                        tallRow(leftCards: row.leftGroup, rightCard: row.right!)
+                    } else {
+                        // Normal row: satu card kiri, satu card kanan
+                        HStack(alignment: .center, spacing: 16) {
+                            MetricCard(
+                                title: row.left.title,
+                                value: row.left.value,
+                                icon: row.left.icon,
+                                isReversed: false
+                            )
+                            .frame(maxWidth: .infinity)
+                            
+                            if let right = row.right {
+                                MetricCard(
+                                    title: right.title,
+                                    value: right.value,
+                                    icon: right.icon,
+                                    isReversed: true
+                                )
+                                .frame(maxWidth: .infinity)
+                            } else {
+                                Spacer().frame(maxWidth: .infinity)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func tallRow(leftCards: [CardData], rightCard: CardData) -> some View {
+        HStack(alignment: .top, spacing: 16) {
+            VStack(spacing: 0) {
+                ForEach(leftCards) { card in
                     MetricCard(
                         title: card.title,
                         value: card.value,
                         icon: card.icon,
-                        isReversed: index % 2 != 0 // True jika indeks ganjil (kolom kanan)
+                        isReversed: false
                     )
                 }
             }
+            .frame(maxWidth: .infinity)
+
+            MetricCard(
+                title: rightCard.title,
+                value: rightCard.value,
+                icon: rightCard.icon,
+                isReversed: true,
+                isTall: true,
+                decorativeIcon: rightCard.decorativeIcon
+            )
+            .frame(width: 140)
         }
+    }
+
+    private struct CardRow {
+        let left: CardData
+        let leftGroup: [CardData]
+        let right: CardData?
+    }
+
+    private func pairCards(_ cards: [CardData]) -> [CardRow] {
+        var rows: [CardRow] = []
+        var i = 0
+        
+        while i < cards.count {
+            let current = cards[i]
+            
+            if i + 1 < cards.count && cards[i + 1].isTall {
+                let tallCard = cards[i + 1]
+                
+                var leftGroup: [CardData] = [current]
+                var j = i + 2
+                while j < cards.count && !cards[j].isTall {
+                    if leftGroup.count < 2 {
+                        leftGroup.append(cards[j])
+                        j += 1
+                    } else {
+                        break
+                    }
+                }
+                
+                rows.append(CardRow(
+                    left: current,
+                    leftGroup: leftGroup,
+                    right: tallCard
+                ))
+                i = j
+                
+            } else {
+                let right = i + 1 < cards.count ? cards[i + 1] : nil
+                rows.append(CardRow(
+                    left: current,
+                    leftGroup: [current],
+                    right: right
+                ))
+                i += 2
+            }
+        }
+        
+        return rows
     }
     
     private func generateEnvironmentCards(intel: PlaceIntel) -> [CardData] {
         var cards: [CardData] = []
-        if settings.showTemperature { cards.append(CardData(title: "Temperature", value: intel.temperatureLevel, icon: "thermometer.medium")) }
-        if settings.showFloodRisk { cards.append(CardData(title: "Flood Risk", value: intel.floodRisk, icon: "water.waves")) }
-        if settings.showAirQuality { cards.append(CardData(title: "Air Quality", value: intel.airQualityLevel, icon: "wind")) }
+        
+        if settings.showTemperature {
+            cards.append(CardData(
+                title: "Temperature",
+                value: intel.temperatureLevel,
+                icon: "thermometer.medium"
+            ))
+        }
+        
+        if settings.showFloodRisk {
+            cards.append(CardData(
+                title: "Flood Risk",
+                value: intel.floodRisk,
+                icon: "water.waves",
+                isTall: true,
+                decorativeIcon: "water.waves"
+            ))
+        }
+        
+        if settings.showAirQuality {
+            cards.append(CardData(
+                title: "Air Quality",
+                value: intel.airQualityLevel,
+                icon: "wind"
+            ))
+        }
+        
         return cards
     }
     
     private func generateAccessibilityCards(intel: PlaceIntel) -> [CardData] {
-            var cards: [CardData] = []
-            if settings.showGreenSpaces { cards.append(CardData(title: "Green Spaces", value: intel.greenSpaces, icon: "tree")) }
-            if settings.showRoadAccess { cards.append(CardData(title: "Road Access", value: intel.roadAccess, icon: "road.lanes")) }
-            
-            if settings.showPublicFacilities {
-                // Dinamis berdasarkan API
-                if intel.hasSchool { cards.append(CardData(title: "Pub. Facilities", value: "School", icon: "building.2")) }
-                if intel.hasHospital { cards.append(CardData(title: "Pub. Facilities", value: "Hospital", icon: "cross.case")) }
-                if intel.hasPolice { cards.append(CardData(title: "Pub. Facilities", value: "Police", icon: "building.columns")) }
-                
-                // Jika fasilitas nol, kita tampilkan info kosong
-                if !intel.hasSchool && !intel.hasHospital && !intel.hasPolice {
-                    cards.append(CardData(title: "Pub. Facilities", value: "None nearby", icon: "building.slash"))
-                }
-            }
-            return cards
+        var cards: [CardData] = []
+        
+        if settings.showGreenSpaces {
+            cards.append(CardData(
+                title: "Green Spaces",
+                value: intel.greenSpaces,
+                icon: "tree"
+            ))
         }
+        
+        if settings.showRoadAccess {
+            cards.append(CardData(
+                title: "Road Access",
+                value: intel.roadAccess,
+                icon: "road.lanes",
+                isTall: true,
+                decorativeIcon: "road.lanes"     
+            ))
+        }
+        
+        if settings.showPublicFacilities {
+            if intel.hasSchool {
+                cards.append(CardData(title: "Pub. Facilities", value: "School", icon: "building.2"))
+            }
+            if intel.hasHospital {
+                cards.append(CardData(title: "Pub. Facilities", value: "Hospital", icon: "cross.case"))
+            }
+            if intel.hasPolice {
+                cards.append(CardData(title: "Pub. Facilities", value: "Police", icon: "building.columns"))
+            }
+            if !intel.hasSchool && !intel.hasHospital && !intel.hasPolice {
+                cards.append(CardData(title: "Pub. Facilities", value: "None nearby", icon: "building.slash"))
+            }
+        }
+        
+        return cards
+    }
     
     private func generateSocialCards(intel: PlaceIntel) -> [CardData] {
         var cards: [CardData] = []
@@ -277,6 +423,8 @@ struct CardData: Identifiable {
     let title: String
     let value: String
     let icon: String
+    var isTall: Bool = false
+    var decorativeIcon: String? = nil
 }
 
 struct Center<Content: View>: View {
@@ -290,12 +438,20 @@ struct Center<Content: View>: View {
     }
 }
 
-#Preview("Place Detail") {
-    PlaceDetailView(place: PlaceResult(
-        name: "Canggu",
-        subtitle: "Kabupaten Badung, Bali, Indonesia",
-        latitude: -8.6478,
-        longitude: 115.1385,
-        distanceKm: 2.5
-    ))
+#Preview("Place Detail — Hi-Fi") {
+    let previewVM = PlaceDetailViewModel.preview()
+    
+    // 2. Tampilkan di dalam sheet tiruan
+    return Color.gray.opacity(0.3)
+        .ignoresSafeArea()
+        .sheet(isPresented: .constant(true)) {
+            PlaceDetailView(
+                place: previewVM.place,
+                previewVM: previewVM
+            )
+            .environmentObject(SettingsViewModel()) 
+            .presentationDetents([.height(420), .large])
+            .presentationCornerRadius(30)
+            .presentationDragIndicator(.visible)
+        }
 }

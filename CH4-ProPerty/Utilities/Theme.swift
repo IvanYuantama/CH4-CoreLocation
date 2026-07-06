@@ -24,11 +24,14 @@ enum Theme {
     
     // MARK: - Typography
     enum Typography {
+        static let heading = Font.system(size: 24, weight: .bold)
         static let title = Font.system(size: 20, weight: .bold)     // Bold, 20px
         static let option = Font.system(size: 18, weight: .regular) // Regular, 18px
         static let section = Font.system(size: 16, weight: .medium) // Medium, 16px
         static let category = Font.system(size: 14, weight: .medium)// Medium, 14px
-        static let subtitle = Font.system(size: 12, weight: .regular)// Regular, 12px
+        static let subtitle = Font.system(size: 14, weight: .medium)// Regular, 12px
+        static let text = Font.system(size: 12, weight: .regular)
+        static let description = Font.system(size: 12, weight: .regular)
     }
 }
 

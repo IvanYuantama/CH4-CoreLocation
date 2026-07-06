@@ -18,13 +18,11 @@ struct SearchSheet: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Drag Indicator Tiruan (Khas Sheet iOS)
-            Capsule()
-                .fill(Color(UIColor.systemGray4))
-                .frame(width: 40, height: 4)
-                .padding(.top, 10)
+//            Capsule()
+//                .fill(Color(UIColor.systemGray4))
+//                .frame(width: 40, height: 4)
+//                .padding(.top, 10)
             
-            // Search Bar Asli di dalam Sheet
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass").foregroundColor(Theme.textSecondary)
                 
@@ -51,7 +49,6 @@ struct SearchSheet: View {
             .padding(.top, 16)
             .padding(.bottom, 10)
 
-            // Handling Error
             if let errorMessage = vm.errorMessage {
                 Text(errorMessage)
                     .font(Theme.Typography.subtitle)
@@ -59,7 +56,6 @@ struct SearchSheet: View {
                     .padding(.horizontal, 20)
             }
 
-            // List Hasil Pencarian
             if vm.results.isEmpty {
                 List(vm.completer.suggestions, id: \.self) { suggestion in
                     Button {
@@ -100,6 +96,7 @@ struct SearchSheet: View {
                 .listStyle(.plain)
             }
         }
+        .padding(.top, 10)
         .background(Theme.cardBackground.ignoresSafeArea()) // Menggunakan abu-abu muda khas iOS
         .onAppear { isFieldFocused = true }
         .onChange(of: vm.query) { _, _ in

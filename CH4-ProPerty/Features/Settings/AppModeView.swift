@@ -14,16 +14,15 @@ struct AppModeView: View {
         VStack(alignment: .leading, spacing: 20) {
             HStack {
                 Text("App Mode")
-                    .font(Theme.Typography.title)
+                    .font(Theme.Typography.heading)
                     .foregroundColor(Theme.textPrimary)
                 Spacer()
-                Image(systemName: "circle.lefthalf.filled")
+                Image(systemName: "circle.righthalf.filled")
                     .font(.title2)
             }
             .padding(.top, 24)
             .padding(.horizontal, 24)
             
-            Divider()
             
             PreferenceRadioRow(
                 title: "Dark",

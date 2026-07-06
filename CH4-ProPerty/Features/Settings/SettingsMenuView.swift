@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct SettingsMenuView: View {
-    @StateObject private var vm = SettingsViewModel()
-    @State private var activeSheet: SettingSheet?
+        @EnvironmentObject private var vm: SettingsViewModel
+        @State private var activeSheet: SettingSheet?
 
     enum SettingSheet: Identifiable {
         case language, mode, data
@@ -19,13 +19,13 @@ struct SettingsMenuView: View {
     var body: some View {
         VStack(spacing: 24) {
             Button { activeSheet = .language } label: {
-                Image(systemName: "character.bubble")
+                Image(systemName: "translate")
             }
             Button { activeSheet = .mode } label: {
-                Image(systemName: "circle.lefthalf.filled")
+                Image(systemName: "circle.righthalf.filled")
             }
             Button { activeSheet = .data } label: {
-                Image(systemName: "message") // Menggunakan ikon yang paling mirip dengan desain
+                Image(systemName: "bubble.left.and.bubble.right")
             }
         }
         .font(.system(size: 20))
@@ -54,4 +54,5 @@ struct SettingsMenuView: View {
 
 #Preview("Settings Menu") {
     SettingsMenuView()
+        .environmentObject(SettingsViewModel())
 }

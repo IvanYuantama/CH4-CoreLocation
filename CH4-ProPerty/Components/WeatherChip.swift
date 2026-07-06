@@ -25,7 +25,6 @@ struct WeatherChip: View {
         .padding(.vertical, 8)
         .background(Color.white)
         .clipShape(Capsule())
-        // Memberikan efek melayang (floating) tipis sesuai desain Hi-Fi
         .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
     }
 }

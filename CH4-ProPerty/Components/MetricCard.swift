@@ -11,49 +11,178 @@ struct MetricCard: View {
     let title: String
     let value: String
     let icon: String
-    var isReversed: Bool = false // Penentu orientasi
-    
+    var isReversed: Bool = false
+    var isTall: Bool = false
+    var decorativeIcon: String? = nil
+
     var body: some View {
-        HStack(spacing: 12) {
-            if !isReversed {
-                // Style Kolom Kiri
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(Theme.primary)
-                    .frame(width: 4, height: 40)
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title).font(Theme.Typography.subtitle).foregroundColor(Theme.textSecondary)
-                    Text(value).font(Theme.Typography.section).foregroundColor(Theme.textPrimary)
-                }
-                
-                Spacer()
-                
-                Image(systemName: icon).font(.system(size: 24)).foregroundStyle(Theme.primary)
-            } else {
-                // Style Kolom Kanan (Mirrored)
-                Image(systemName: icon).font(.system(size: 24)).foregroundStyle(Theme.primary)
-                
-                Spacer()
-                
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text(title).font(Theme.Typography.subtitle).foregroundColor(Theme.textSecondary)
-                    Text(value).font(Theme.Typography.section).foregroundColor(Theme.textPrimary)
-                }
-                
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(Theme.primary)
-                    .frame(width: 4, height: 40)
-            }
+        if isTall {
+            tallCard
+        } else {
+            normalCard
         }
-        .padding(.vertical, 8)
-        .contentShape(Rectangle())
+    }
+
+    // MARK: - Normal Card
+    private var normalCard: some View {
+        HStack(spacing: 0) {
+            RoundedRectangle(cornerRadius: 2)
+                .fill(Theme.primary)
+                .frame(width: 4, height: 40)
+            
+            HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(Theme.Typography.subtitle)
+                        .foregroundColor(Theme.textSecondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    Text(value)
+                        .font(Theme.Typography.section)
+                        .foregroundColor(Theme.textPrimary)
+                        .lineLimit(1)
+                }
+                
+                Spacer()
+                
+                Image(systemName: icon)
+                    .font(.system(size: 20))
+                    .foregroundStyle(Theme.primary)
+                    .frame(width: 28)
+            }
+            .padding(.vertical, 12)
+            .padding(.leading, 12)
+            .padding(.trailing, 4)
+        }
+    }
+
+    // MARK: - Tall Card
+    private var tallCard: some View {
+        HStack(alignment: .top, spacing: 0) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(Theme.Typography.subtitle)
+                    .foregroundColor(Theme.textSecondary)
+                    .lineLimit(1)
+                Text(value)
+                    .font(Theme.Typography.section)
+                    .foregroundColor(Theme.textPrimary)
+                    .lineLimit(1)
+
+                Spacer()
+
+                HStack {
+                    Spacer()
+                    Image(systemName: decorativeIcon ?? icon)
+                        .font(.system(size: 20))
+                        .foregroundStyle(Theme.primary)
+                        .frame(width: 28)
+                }
+            }
+            .padding(.vertical, 12)
+            .padding(.leading, 8)
+            .padding(.trailing, 8)
+
+            RoundedRectangle(cornerRadius: 2)
+                .fill(Theme.primary)
+                .frame(width: 4)
+        }
     }
 }
 
 #Preview {
-    VStack {
-        MetricCard(title: "Temperature", value: "Low", icon: "thermometer.medium", isReversed: false)
-        MetricCard(title: "Flood Risk", value: "High", icon: "water.waves", isReversed: true)
+    ScrollView {
+        VStack(alignment: .leading, spacing: 24) {
+
+            // MARK: Environment
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Environment")
+                    .font(Theme.Typography.section)
+                    .padding(.horizontal, 20)
+
+                HStack(alignment: .top, spacing: 16) {
+                    VStack(spacing: 0) {
+                        MetricCard(
+                            title: "Temperature",
+                            value: "Low",
+                            icon: "thermometer.medium"
+                        )
+                        MetricCard(
+                            title: "Air Quality",
+                            value: "Medium",
+                            icon: "wind"
+                        )
+                    }
+                    .frame(maxWidth: .infinity)
+
+                    MetricCard(
+                        title: "Flood Risk",
+                        value: "High",
+                        icon: "water.waves",
+                        isReversed: true,
+                        isTall: true,
+                        decorativeIcon: "water.waves"
+                    )
+                    .frame(width: 140)
+                }
+                .padding(.horizontal, 20)
+            }
+
+            Divider().padding(.horizontal, 20)
+
+            // MARK: Accessibilities
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Accessibilities")
+                    .font(Theme.Typography.section)
+                    .padding(.horizontal, 20)
+
+                HStack(alignment: .top, spacing: 16) {
+                    VStack(spacing: 0) {
+                        MetricCard(
+                            title: "Green Spaces",
+                            value: "Dense",
+                            icon: "tree"
+                        )
+                        MetricCard(
+                            title: "Pub. Facilities",
+                            value: "School",
+                            icon: "building.2"
+                        )
+                    }
+                    .frame(maxWidth: .infinity)
+
+                    MetricCard(
+                        title: "Road Access",
+                        value: "Collector",
+                        icon: "road.lanes",
+                        isReversed: true,
+                        isTall: true,
+                        decorativeIcon: "road.lanes"
+                    )
+                    .frame(width: 140)
+                }
+                .padding(.horizontal, 20)
+
+                HStack(spacing: 16) {
+                    MetricCard(
+                        title: "Pub. Facilities",
+                        value: "Hospital",
+                        icon: "cross.case"
+                    )
+                    .frame(maxWidth: .infinity)
+
+                    MetricCard(
+                        title: "Pub. Facilities",
+                        value: "Police",
+                        icon: "building.columns",
+                        isReversed: true
+                    )
+                    .frame(maxWidth: .infinity)
+                }
+                .padding(.horizontal, 20)
+            }
+        }
+        .padding(.vertical, 20)
     }
-    .padding()
+    .background(Color.white)
 }

@@ -14,9 +14,9 @@ import Combine
 final class WeatherManager: ObservableObject {
     struct Snapshot {
         let temperature: String
-        let precipitation: String
         let humidity: String
         let uv: String
+        let weatherSymbol: String  
     }
 
     @Published var snapshot: Snapshot?
@@ -25,9 +25,9 @@ final class WeatherManager: ObservableObject {
 
     func loadIfNeeded(for coordinate: CLLocationCoordinate2D) {
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        
-        // Cek agar tidak fetch ulang jika lokasi belum bergeser jauh (25km)
-        if let lastFetchLocation, snapshot != nil, lastFetchLocation.distance(from: location) < 25_000 {
+        if let lastFetchLocation,
+           snapshot != nil,
+           lastFetchLocation.distance(from: location) < 25_000 {
             return
         }
         
@@ -41,16 +41,20 @@ final class WeatherManager: ObservableObject {
                 let current = weather.currentWeather
                 let tempC = Int(current.temperature.converted(to: .celsius).value.rounded())
                 let humidity = Int((current.humidity * 100).rounded())
-                let precipMM = weather.hourlyForecast.forecast.first?.precipitationAmount.converted(to: .millimeters).value ?? 0
                 
                 snapshot = Snapshot(
                     temperature: "\(tempC)°C",
-                    precipitation: String(format: "%.0f mm", precipMM),
                     humidity: "\(humidity)%",
-                    uv: "\(current.uvIndex.value) UV"
+                    uv: "\(current.uvIndex.value) UV",
+                    weatherSymbol: current.symbolName
                 )
             } catch {
-                // Fallback jika API gagal/capability belum diaktifkan di Xcode
+                snapshot = Snapshot(
+                    temperature: "--°C",
+                    humidity: "--%",
+                    uv: "-- UV",
+                    weatherSymbol: "cloud.fill"
+                )
             }
         }
     }

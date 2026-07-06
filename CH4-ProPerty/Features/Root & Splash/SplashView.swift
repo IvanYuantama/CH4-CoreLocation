@@ -12,7 +12,7 @@ struct SplashView: View {
         VStack(spacing: 26) {
             // Kita hapus Spacer() di atas agar konten tidak terdorong ke bawah
             
-            Image("Logo") // Pastikan nama aset di Assets.xcassets benar
+            Image("app-logo") // Pastikan nama aset di Assets.xcassets benar
                 .resizable()
                 .scaledToFit()
                 .frame(width: 200, height: 200)
