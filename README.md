@@ -1,11 +1,11 @@
 ## Present Your Team
 
-| Name                   | Role |
-| ---------------------- |------|
-| Andhika Pangestu       | Tech |
-| Benedict Kenjiro Lehot | Tech |
-| Ivan Yuantama Pradipta | Tech |
-| Ryan Safa Tjendana     | Design |
+| Name                   | Role                |
+| ---------------------- | ------------------- |
+| Andhika Pangestu       | Tech                |
+| Benedict Kenjiro Lehot | Tech                |
+| Ivan Yuantama Pradipta | Tech                |
+| Ryan Safa Tjendana     | Design              |
 | William Gozali         | Tech, Domain Expert |
 
 ---
@@ -16,14 +16,14 @@ _What did you assume, before any real exploration (start of investigation phase)
 
 We think we'll end up using:
 
-- MapKit for rendering the map and displaying pins
-- CoreLocation for capturing the user's GPS coordinates
-- GeoToolbox for surfacing location details such as place names, Maps links, and nearby point-of-interest information at a tapped coordinate
-- WeatherKit for capturing variables like temperature, humidity, etc
-- FoundationModels to make a summary based on provided data. 
+- MapKit for rendering the map
+- CoreLocation for capturing GPS coordinates
+- GeoToolbox for giving location details like place names, Maps links, and another information at a tapped coordinate
+- WeatherKit for capturing additional variables like temperature, humidity, etc
+- FoundationModels to make a summary based on provided data.
 
 Because:
-MapKit and CoreLocation are the standard Apple pairing for anything location based, so they felt like the obvious fit from the start. We assumed MapKit alone would not be enough to surface rich location metadata like formatted addresses and map links, so GeoToolbox seemed like a necessary addition. We use WeatherKit to get real time variable data so it can be more additional data. After fetching data, we want FoundationModels to generate a brief summary to be shown before each detailed data. 
+We try to make plus and minus for every framework like CoreHaptics, CoreMotion, CoreLocation and Nearby Interaction. We decide to use CoreLocation for our core framework because it give more plus better than another framework, and also we have 1 domain expert to do geography. And then, we decide to use MapKit for displaying map, and GeoToolBox for giving information about pin location like Maps Link, Name of the place, etc. We also use WeatherKit to get realtime variable data so we can have more additional data. We also use FoundationModels to generate a summary to be shown before each detailed data.
 
 ---
 
@@ -33,24 +33,24 @@ _Not your conclusion, your actual process. Update this as you go, it doesn't nee
 
 **What we browsed, and what surprised us:**
 
-- We explored MapKit's `MKCoordinateRegion` and `MKMapView` to understand how to center the map on a live coordinate. The setup was straightforward.
-- We looked for reverse geocoding and find that with `CLGeocoder`, we can implement that.
-- We discovered `MKMapItem` can generate more details than `GeoToolBox` for pin location. So we decide to use only `MKMapItem` for our app.
+- We explored MapKit to understand how to center the map on a live coordinate and how to displaying map using MapKit.
+- We looked for reverse geocoding and find that with CoreLocation `CLGeocoder`, we can implement that.
+- MapKit can generate more details than `GeoToolBox` for pin location. So we decide to use only MapKit `MKMapItem` for our app.
+- If we want to use WeatherKit, we need to activate that features on an Apple Developer account.
 
 **What we actually built or tested in code:**
 
-- A `LocationManager` class using `CLLocationManager` with `requestWhenInUseAuthorization()` that publishes the live coordinate via `@Published` for SwiftUI binding.
-- An `MKCoordinateRegion` binding that re-centers the map whenever the user's coordinate updates.
-- A reverse geocoding flow using `CLGeocoder.reverseGeocodeLocation()` that populates a detail card with a formatted address and a Maps link via `MKMapItem`.
-- A WeatherModel class using `WeatherService.shared.weather(for:)` that fetches current temperature, humidity, precipitation, and UV index for the selected coordinate, requiring the WeatherKit capability to be activated on an Apple Developer account.
-- A `LanguageModelSession` class from `FoundationModels` to make a summary with a sets of `instruction`.
-- A PostGIS + Express.js backend to give the data geojson.
+- A CoreLocation realtime GPS coordinate using iphone
+- A CoreLocation reverse geocoding for pinning a point location
+- A WeatherKit that fetches current temperature, humidity, etc, for the selected coordinate
+- A LanguageModelSession class from FoundationModels to make a summary data
+- A PostGIS + Express.js backend to process and give geojson data
 
 **What we discovered that we didn't expect:**
 
-- Supabase free tier no longer exposes a direct PostgreSQL connection for new projects, routing all traffic through PgBouncer in transaction pooling mode. This caused abnormally high query planning times and overall API response times of 8–10 seconds.
-- Migrating the database to Neon resolved the direct connection issue and brought API response time down to under 2 seconds.
-- The `FoundationModels` still not provide model for Bahasa Indonesia. 
+- Supabase free tier no longer exposes a direct PostgreSQL connection for new projects, it will use pooling mode that make API response times more longer like 8–10 seconds.
+- Migrating the database to NeonDB resolved the direct connection issue and brought API response time down to under 2 seconds.
+- The FoundationModels still not provide model for Bahasa Indonesia.
 
 ---
 
@@ -59,24 +59,22 @@ _Not your conclusion, your actual process. Update this as you go, it doesn't nee
 _Name at least one real alternative you seriously considered, and explain why it got cut._
 
 **We considered:**
-Using `GeoToolBox` as the primary framework for surfacing location details at a tapped coordinate, such as place names, formatted addresses, Google Maps links, etc.
+Using GeoToolBox for giving location details at a tapped coordinate, like place names, formatted addresses, Maps links, etc.
 
 **We dropped it because:**
-After exploring MapKit more thoroughly, we found that `MKMapItem` already provides a complete point description including place name, address, and a direct deep link to Apple Maps with no external dependency required.
-
+After exploring MapKit, we found that `MKMapItem` already provides a complete point description including place name, address, and a direct deep link to Apple Maps with no external dependency required.
 
 **We considered:**
-Keeping Supabase as the long term database host, since it was already in use during early development.
+Not using Supabase Free Trial
 
 **We dropped it because:**
-Supabase free tier removed direct PostgreSQL connections for new projects, forcing all traffic through PgBouncer in transaction pooling mode. This disabled prepared statement caching and inflated query planning time from the expected ~2ms to ~48ms per query, making the API too slow for our app loading. We migrated to NeonDB, which provides direct connections and full PostGIS support on the free tier.
-
+Supabase free tier removed direct PostgreSQL connections for new projects our API request too slow for geojson data. We migrated to NeonDB, which provides direct connections and full PostGIS support on the free tier.
 
 **We considered:**
-Using `FoundationModels` to make a summary. 
+Using FoundationModels to make a summary.
 
 **We dropped it because:**
-We tried the `FoundationModels`, but it only works when our device (Iphone 17) is using English as it's general system languange. From what we found, `FoundationModels` has several language it currently support, but Indonesia wasn't on the list. We did tried with several other language on the list as our general system language, but the model also didn't work. For as long as we've tested, the `FoundationModels` only work when the general system language is English. We then thought to only use this model when the device language is English and replace it with a template when other language is used, but then we come to a sense like "Why not just use a template for every device language and not use an AI model to make a summary?"
+We tried the FoundationModels, but it only works when our device (Iphone 17) is using English as it's general system languange. From what we found, FoundationModels has several language it currently support, but Indonesia wasn't on the list. We did tried with several other language on the list as our general system language, but the model also didn't work. For as long as we've tested, the FoundationModels only work when the general system language is English. We then thought to only use this model when the device language is English and replace it with a template when other language is used, but then we come to a sense like "Why not just use a template for every device language and not use an AI model to make a summary?"
 
 ---
 
@@ -88,6 +86,13 @@ The test endpoint was consistently taking 8–10 seconds per request even with G
 
 How we worked around it:
 We migrated the database from Supabase to Neon, which supports direct PostgreSQL connections on the free tier. Planning time dropped to normal levels and total API response time improved significantly.
+
+**Situation 2: Bahasa is not supported by Language Model Session**
+
+Language Model Session can't work if we use Bahasa
+
+How we worked around it:
+We will make summary template for both language.
 
 ---
 
@@ -101,7 +106,7 @@ We migrated the database from Supabase to Neon, which supports direct PostgreSQL
 
 **What changed since Section 1, and why:**
 
-The CoreLocation and MapKit pairing held exactly as assumed, and CLGeocoder (which was already part of CoreLocation) proved even easier to integrate than expected.
+We not use GeoToolBox anymore because MapKit already give more detail data for pinning location better than GeoToolBox. We not use Foundation Models (Language Model Session) because it not work for Bahasa, so we decide to use template for both language.
 
 ---
 
@@ -109,16 +114,16 @@ The CoreLocation and MapKit pairing held exactly as assumed, and CLGeocoder (whi
 
 ### About the Frameworks
 
-All three frameworks are genuinely necessary and work together in sequence. CoreLocation provides the coordinate and resolves the address, MapKit consumes that coordinate to render the map and display the surrounding area, WeatherKit consumes that same coordinate to fetch real-time environmental variables (temperature, humidity, precipitation, UV index) that enrich the property overview with live conditions rather than static data alone. Removing any one of them degrades the core use case: without CoreLocation there is no coordinate or address, without MapKit there is no spatial context, and without WeatherKit the overview is limited to give data without no live environmental signal.
+All three frameworks are genuinely necessary and work together in sequence. CoreLocation provides the coordinate and realtime GPS location, MapKit consumes that coordinate to render the map and display the surrounding area, WeatherKit consumes that same coordinate to fetch realtime data (temperature, humidity, etc) that enrich the property overview with live conditions rather than static data alone. Removing any one of them degrades the core use case: without CoreLocation there is no coordinate, without MapKit there is no map displaying, and without WeatherKit the overview doesnt have real environmental data.
 
 The challenge response reflects this: _Create an app that utilizes Location Manager for location tracking, Reverse Geocoding for address resolution, Coordinate Regions for map navigation, and WeatherService to to fetch and present environmental conditions data for any selected property._
 
 ### About Accessibility and Localization
 
-We localized the app in two languages: `English` and `Bahasa Indonesia`. The target users for this app is Indonesian people who want buy property and tourism people who want rent property, so supporting both languages ensures the app is accessible to the full audience.
+We localized the app in two languages, English and Bahasa Indonesia. The target users for this app is Indonesian people who want buy property and tourism people who want rent property, so supporting both languages ensures the app is accessible to the full audience.
 
 ### About Privacy
 
-The app requests a single permission: `NSLocationWhenInUseUsageDescription`, which allows location access only while the app is in the foreground. No location data is stored on-device or transmitted beyond the coordinate sent to our own backend API for spatial analysis.
+The app requests a single permission Location Access, which allows GPS location run only while the app is in the foreground. Location data is sent to our own backend API for spatial analysis.
 
-If the user denies location permission, the map defaults to a region centered on Bali and the "analyze current location" button is disabled. A card is shown to guide the user to enable location access in Settings. Everything else in the app still works normally.
+If the user denies location permission, the map will display but can't analyze the place that the user now there. A card is shown to guide the user to enable location access in Settings. Everything else in the app still works normally.
