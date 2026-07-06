@@ -35,7 +35,7 @@ _Not your conclusion, your actual process. Update this as you go, it doesn't nee
 
 - We explored MapKit to understand how to center the map on a live coordinate and how to displaying map using MapKit.
 - We looked for reverse geocoding and find that with CoreLocation `CLGeocoder`, we can implement that.
-- MapKit can generate more details than `GeoToolBox` for pin location. So we decide to use only MapKit `MKMapItem` for our app.
+- MapKit can generate more details data than `GeoToolBox` for pin location. So we decide to use only MapKit `MKMapItem` for our app.
 - If we want to use WeatherKit, we need to activate that features on an Apple Developer account.
 
 **What we actually built or tested in code:**
@@ -51,6 +51,12 @@ _Not your conclusion, your actual process. Update this as you go, it doesn't nee
 - Supabase free tier no longer exposes a direct PostgreSQL connection for new projects, it will use pooling mode that make API response times more longer like 8–10 seconds.
 - Migrating the database to NeonDB resolved the direct connection issue and brought API response time down to under 2 seconds.
 - The FoundationModels still not provide model for Bahasa Indonesia.
+
+---
+
+## Our First Idea
+
+After we try all of the Framework we have an idea about analyze a property location. The app will give analyze data like flood risk, temperature, air pollution, etc to give user more data before buying a property. We hope our app can make user more confident to buy a new property.
 
 ---
 
