@@ -1,12 +1,12 @@
 ## Present Your Team
 
-| Name                   |
-| ---------------------- |
-| Andhika Pangestu       |
-| Benedict Kenjiro Lehot |
-| Ivan Yuantama Pradipta |
-| Ryan Safa Tjendana     |
-| William Gozali         |
+| Name                   | Role |
+| ---------------------- |------|
+| Andhika Pangestu       | Tech |
+| Benedict Kenjiro Lehot | Tech |
+| Ivan Yuantama Pradipta | Tech |
+| Ryan Safa Tjendana     | Design |
+| William Gozali         | Tech, Domain Expert |
 
 ---
 
