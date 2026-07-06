@@ -239,14 +239,15 @@ struct SearchSheet: View {
                     Button {
                         runSearch(completion: suggestion)
                     } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: "magnifyingglass.circle.fill")
+                        // Style disamakan dengan SearchResultRow (pin merah).
+                        HStack(alignment: .top, spacing: 12) {
+                            Image(systemName: "mappin.circle.fill")
                                 .font(.title3)
-                                .foregroundStyle(.secondary)
-                            VStack(alignment: .leading, spacing: 2) {
+                                .foregroundStyle(Theme.pin)
+                            VStack(alignment: .leading, spacing: 3) {
                                 Text(suggestion.title)
-                                    .font(.callout)
-                                    .foregroundStyle(.primary)
+                                    .font(.callout.weight(.semibold))
+                                    .lineLimit(1)
                                 if !suggestion.subtitle.isEmpty {
                                     Text(suggestion.subtitle)
                                         .font(.caption)
@@ -286,8 +287,10 @@ struct SearchSheet: View {
             defer { isLoading = false }
             do {
                 let found = try await PlaceSearchService.search(completion: completion, around: center)
-                results = found
-                if found.isEmpty {
+                if let best = found.first {
+                    // Saran sudah spesifik → langsung pin + detail, tanpa list kedua.
+                    onSelect(best)
+                } else {
                     errorMessage = String(
                         format: AppLanguage.string("No results for \"%@\"."),
                         completion.title
