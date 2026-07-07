@@ -29,7 +29,7 @@ struct SettingsMenuView: View {
             }
         }
         .font(.system(size: 20))
-        .foregroundColor(Theme.textPrimary)
+        .foregroundColor(.textPrimary)
         .padding(.vertical, 20)
         .padding(.horizontal, 16)
         .background(Color.white)

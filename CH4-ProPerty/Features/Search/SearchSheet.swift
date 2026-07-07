@@ -24,7 +24,7 @@ struct SearchSheet: View {
 //                .padding(.top, 10)
             
             HStack(spacing: 10) {
-                Image(systemName: "magnifyingglass").foregroundColor(Theme.textSecondary)
+                Image(systemName: "magnifyingglass").foregroundColor(.textSecondary)
                 
                 TextField("Search a location", text: $vm.query)
                     .focused($isFieldFocused)
@@ -37,7 +37,7 @@ struct SearchSheet: View {
                 if vm.isLoading {
                     ProgressView().controlSize(.small)
                 } else {
-                    Image(systemName: "mic.fill").foregroundColor(Theme.textSecondary)
+                    Image(systemName: "mic.fill").foregroundColor(.textSecondary)
                 }
             }
             .padding(.horizontal, 16)
@@ -64,16 +64,16 @@ struct SearchSheet: View {
                         HStack(spacing: 16) {
                             Image(systemName: "magnifyingglass.circle.fill")
                                 .font(.title2)
-                                .foregroundColor(Theme.textSecondary)
+                                .foregroundColor(.textSecondary)
                             
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(suggestion.title)
                                     .font(Theme.Typography.section)
-                                    .foregroundColor(Theme.textPrimary)
+                                    .foregroundColor(.textPrimary)
                                 if !suggestion.subtitle.isEmpty {
                                     Text(suggestion.subtitle)
                                         .font(Theme.Typography.subtitle)
-                                        .foregroundColor(Theme.textSecondary)
+                                        .foregroundColor(.textSecondary)
                                         .lineLimit(1)
                                 }
                             }
@@ -122,7 +122,7 @@ struct SearchResultRow: View {
                 if let distance = place.distanceLabel {
                     Text(distance)
                         .font(Theme.Typography.subtitle)
-                        .foregroundColor(Theme.textSecondary)
+                        .foregroundColor(.textSecondary)
                 }
             }
             .frame(width: 45) // Lebar tetap agar sejajar
@@ -131,12 +131,12 @@ struct SearchResultRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(place.name)
                     .font(Theme.Typography.section)
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundColor(.textPrimary)
                     .lineLimit(1)
                 
                 Text(place.subtitle)
                     .font(Theme.Typography.category)
-                    .foregroundColor(Theme.textSecondary)
+                    .foregroundColor(.textSecondary)
                     .lineLimit(2) // Sesuai desain, subtitle bisa cukup panjang
             }
             .padding(.top, 2)
@@ -147,7 +147,7 @@ struct SearchResultRow: View {
             Button(action: onBookmark) {
                 Image(systemName: isBookmarked ? "bookmark.fill" : "bookmark")
                     .font(.system(size: 20))
-                    .foregroundColor(Theme.primary)
+                    .foregroundColor(.brand)
             }
             .buttonStyle(.plain)
             .padding(.top, 4)

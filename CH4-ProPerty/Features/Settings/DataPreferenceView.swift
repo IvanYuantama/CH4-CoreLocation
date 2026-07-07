@@ -16,7 +16,7 @@ struct DataPreferenceView: View {
                 HStack {
                     Text("Data Preferences")
                         .font(Theme.Typography.heading)
-                        .foregroundColor(Theme.textPrimary)
+                        .foregroundColor(.textPrimary)
                     Spacer()
                     Image(systemName: "bubble.left.and.bubble.right")
                         .font(.title2)

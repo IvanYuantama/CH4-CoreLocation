@@ -17,7 +17,7 @@ struct LanguagePreferenceView: View {
             HStack {
                 Text("Language Preference")
                     .font(Theme.Typography.heading)
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundColor(.textPrimary)
                 Spacer()
                 Image(systemName: "translate")
                     .font(.title2)
@@ -65,21 +65,21 @@ struct PreferenceRadioRow: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(Theme.Typography.option)
-                        .foregroundColor(Theme.textPrimary)
+                        .foregroundColor(.textPrimary)
                     Text(subtitle)
                         .font(Theme.Typography.subtitle)
-                        .foregroundColor(Theme.textSecondary)
+                        .foregroundColor(.textSecondary)
                 }
                 Spacer()
                 
                 // Indikator Radio Button kustom
                 ZStack {
                     Circle()
-                        .stroke(isSelected ? Theme.primary : Color.gray.opacity(0.5), lineWidth: 2)
+                        .stroke(isSelected ? .brand : Color.gray.opacity(0.5), lineWidth: 2)
                         .frame(width: 20, height: 20)
                     if isSelected {
                         Circle()
-                            .fill(Theme.primary)
+                            .fill(.brand)
                             .frame(width: 12, height: 12)
                     }
                 }

@@ -46,7 +46,7 @@ struct MainMapView: View {
                 }
                 
                 HStack(alignment: .top) {
-                    Text("\(Text("Pro").foregroundColor(Theme.primary))\(Text("Perty").foregroundColor(Theme.textPrimary))")
+                    Text("\(Text("Pro").foregroundColor(.brand))\(Text("Perty").foregroundColor(.textPrimary))")
                         .font(.system(size: 24, weight: .heavy, design: .rounded))
                         .padding(.top, 4)
                         .padding(.leading, 130)
@@ -61,7 +61,7 @@ struct MainMapView: View {
                         } label: {
                             Image(systemName: showSettings ? "xmark" : "line.3.horizontal")
                                 .font(.system(size: 18, weight: .medium))
-                                .foregroundColor(Theme.textPrimary)
+                                .foregroundColor(.textPrimary)
                                 .frame(width: 45, height: 45)
                                 .background(Color(UIColor.systemBackground))
                                 .clipShape(Circle())
@@ -114,7 +114,7 @@ struct MainMapView: View {
             } label: {
                 Image(systemName: "map.fill")
                     .font(.system(size: 20))
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundColor(.textPrimary)
                     .frame(width: 49, height: 45)
                     .background(Color(UIColor.systemBackground))
                     .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -125,11 +125,11 @@ struct MainMapView: View {
                 vm.showSearch = true
             } label: {
                 HStack(spacing: 10) {
-                    Image(systemName: "magnifyingglass").foregroundColor(Theme.textSecondary)
-                    Text("Search a location").foregroundColor(Theme.textSecondary)
+                    Image(systemName: "magnifyingglass").foregroundColor(.textSecondary)
+                    Text("Search a location").foregroundColor(.textSecondary)
                         .font(Theme.Typography.section)
                     Spacer()
-                    Image(systemName: "mic.fill").foregroundColor(Theme.textSecondary)
+                    Image(systemName: "mic.fill").foregroundColor(.textSecondary)
                 }
                 .padding(.horizontal, 16)
                 .frame(height: 50)
@@ -144,7 +144,7 @@ struct MainMapView: View {
             } label: {
                 Image(systemName: "location.fill")
                     .font(.system(size: 20))
-                    .foregroundColor(Theme.primary)
+                    .foregroundColor(.brand)
                     .frame(width: 45, height: 45)
                     .background(Color(UIColor.systemBackground))
                     .clipShape(Circle())

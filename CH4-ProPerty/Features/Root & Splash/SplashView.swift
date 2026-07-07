@@ -19,7 +19,7 @@ struct SplashView: View {
             
             Text("Consider your property like a professional")
                 .font(.footnote)
-                .foregroundStyle(Theme.textSecondary)
+                .foregroundStyle(.textSecondary)
             
             // Kita hapus juga Spacer() di bawah
         }

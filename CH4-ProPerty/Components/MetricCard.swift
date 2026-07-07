@@ -27,19 +27,19 @@ struct MetricCard: View {
     private var normalCard: some View {
         HStack(spacing: 0) {
             RoundedRectangle(cornerRadius: 2)
-                .fill(Theme.primary)
+                .fill(.brand)
                 .frame(width: 4, height: 40)
             
             HStack(spacing: 8) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(Theme.Typography.subtitle)
-                        .foregroundColor(Theme.textSecondary)
+                        .foregroundColor(.textSecondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
                     Text(value)
                         .font(Theme.Typography.section)
-                        .foregroundColor(Theme.textPrimary)
+                        .foregroundColor(.textPrimary)
                         .lineLimit(1)
                 }
                 
@@ -47,7 +47,7 @@ struct MetricCard: View {
                 
                 Image(systemName: icon)
                     .font(.system(size: 20))
-                    .foregroundStyle(Theme.primary)
+                    .foregroundStyle(.brand)
                     .frame(width: 28)
             }
             .padding(.vertical, 12)
@@ -62,11 +62,11 @@ struct MetricCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(Theme.Typography.subtitle)
-                    .foregroundColor(Theme.textSecondary)
+                    .foregroundColor(.textSecondary)
                     .lineLimit(1)
                 Text(value)
                     .font(Theme.Typography.section)
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundColor(.textPrimary)
                     .lineLimit(1)
 
                 Spacer()
@@ -75,18 +75,19 @@ struct MetricCard: View {
                     Spacer()
                     Image(systemName: decorativeIcon ?? icon)
                         .font(.system(size: 20))
-                        .foregroundStyle(Theme.primary)
+                        .foregroundStyle(.brand)
                         .frame(width: 28)
                 }
             }
-            .padding(.vertical, 12)
+            .padding(.bottom, 12)
             .padding(.leading, 8)
             .padding(.trailing, 8)
 
             RoundedRectangle(cornerRadius: 2)
-                .fill(Theme.primary)
+                .fill(.brand)
                 .frame(width: 4)
         }
+        .padding(.vertical, 12)
     }
 }
 
