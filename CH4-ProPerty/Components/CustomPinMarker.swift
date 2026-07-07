@@ -12,11 +12,11 @@ struct CustomPinMarker: View {
         VStack(spacing: 0) {
             Circle()
                 // Menggunakan warna pin merah yang sudah ada di Theme sebelumnya
-                .fill(Color(red: 0.89, green: 0.22, blue: 0.21))
+                .fill(.markerHead)
                 .frame(width: 19, height: 19)
             
             Rectangle()
-                .fill(Color.black)
+                .fill(.markerNeedle)
                 .frame(width: 3, height: 20)
         }
     }
@@ -27,11 +27,11 @@ struct CustomPinMarkerMini: View {
         VStack(spacing: 0) {
             Circle()
                 // Menggunakan warna pin merah yang sudah ada di Theme sebelumnya
-                .fill(Color(red: 0.89, green: 0.22, blue: 0.21))
+                .fill(.markerHead)
                 .frame(width: 10, height: 10)
             
             Rectangle()
-                .fill(Color.black)
+                .fill(.markerNeedle)
                 .frame(width: 1.58, height: 9.6)
         }
     }

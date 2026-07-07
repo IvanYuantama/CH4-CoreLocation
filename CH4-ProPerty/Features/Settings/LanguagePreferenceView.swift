@@ -48,7 +48,7 @@ struct LanguagePreferenceView: View {
             
             Spacer()
         }
-        .background(Theme.background.ignoresSafeArea())
+        .background(Color.background.ignoresSafeArea())
     }
 }
 

@@ -23,7 +23,7 @@ struct WeatherChip: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(Color.white)
+        .background(Color.background)
         .clipShape(Capsule())
         .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
     }

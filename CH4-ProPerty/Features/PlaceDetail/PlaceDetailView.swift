@@ -43,7 +43,7 @@ struct PlaceDetailView: View {
             .padding(.horizontal, 20)
             .padding(.bottom, 30)
         }
-        .background(Theme.background.ignoresSafeArea())
+        .background(Color.background.ignoresSafeArea())
         .translationTask(vm.translationConfig) { session in
             await vm.processTranslation(session: session)
         }
@@ -93,7 +93,7 @@ struct PlaceDetailView: View {
                     .foregroundColor(.white)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
-                    .background(.brand)
+                    .background(Theme.primary)
                     .clipShape(RoundedRectangle(cornerRadius: Theme.cardRadius))
                 }
 

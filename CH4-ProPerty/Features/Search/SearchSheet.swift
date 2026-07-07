@@ -29,6 +29,7 @@ struct SearchSheet: View {
                 TextField("Search a location", text: $vm.query)
                     .focused($isFieldFocused)
                     .font(Theme.Typography.section)
+                    .foregroundStyle(.textSecondary)
                     .submitLabel(.search)
                     .onSubmit {
                         vm.runSearch(around: center)
@@ -42,7 +43,7 @@ struct SearchSheet: View {
             }
             .padding(.horizontal, 16)
             .frame(height: 50)
-            .background(Color.white)
+            .background(Color.background)
             .clipShape(Capsule())
             .shadow(color: .black.opacity(0.05), radius: 3, y: 1)
             .padding(.horizontal, 20)
@@ -97,7 +98,7 @@ struct SearchSheet: View {
             }
         }
         .padding(.top, 10)
-        .background(Theme.cardBackground.ignoresSafeArea()) // Menggunakan abu-abu muda khas iOS
+        .background(Color.cardBackground.ignoresSafeArea()) // Menggunakan abu-abu muda khas iOS
         .onAppear { isFieldFocused = true }
         .onChange(of: vm.query) { _, _ in
             vm.updateQuery(around: center)

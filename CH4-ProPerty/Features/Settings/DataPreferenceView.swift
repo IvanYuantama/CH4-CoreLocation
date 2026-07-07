@@ -56,7 +56,7 @@ struct DataPreferenceView: View {
                 Spacer(minLength: 40)
             }
         }
-        .background(Theme.background.ignoresSafeArea())
+        .background(Color.background.ignoresSafeArea())
     }
 }
 
