@@ -17,11 +17,11 @@ struct MapModeSheet: View {
             HStack {
                 Text("Map Mode")
                     .font(Theme.Typography.title)
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundColor(Color(.textPrimary))
                 Spacer()
                 Image(systemName: "map")
                     .font(.title2)
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundColor(Color(.textPrimary))
             }
             .padding(.top, 24)
             .padding(.horizontal, 24)

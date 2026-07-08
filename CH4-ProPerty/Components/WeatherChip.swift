@@ -14,12 +14,12 @@ struct WeatherChip: View {
     var body: some View {
         HStack(spacing: 4) { 
             Image(systemName: icon)
-                .foregroundStyle(Theme.primary)
+                .foregroundStyle(Color(.brand))
                 .font(.system(size: 14, weight: .bold))
             
             Text(label)
                 .font(Theme.Typography.category)
-                .foregroundColor(Theme.textPrimary)
+                .foregroundColor(Color(.textPrimary))
         }
         .frame(width: 70, height: 28)
         .background(Color(UIColor.systemBackground))

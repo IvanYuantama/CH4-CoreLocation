@@ -15,12 +15,12 @@ struct DataPreferenceView: View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     Text("Data Preferences")
-                        .font(Theme.Typography.title)
-                        .foregroundColor(Theme.textPrimary)
+                        .font(Theme.Typography.heading)
+                        .foregroundColor(Color(.textPrimary))
                     Spacer()
                     Image(systemName: "bubble.left.and.bubble.right")
                         .font(.title2)
-                        .foregroundColor(Theme.textPrimary)
+                        .foregroundColor(Color(.textPrimary))
                 }
                 .padding(.top, 24)
                 .padding(.horizontal, 24)
@@ -65,7 +65,7 @@ struct DataPreferenceView: View {
                 Spacer(minLength: 40)
             }
         }
-        .background(Theme.background.ignoresSafeArea())
+        .background(Color(.background).ignoresSafeArea())
     }
 }
 

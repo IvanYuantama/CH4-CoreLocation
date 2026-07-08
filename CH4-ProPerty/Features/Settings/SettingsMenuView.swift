@@ -35,10 +35,10 @@ struct SettingsMenuView: View {
             .contentShape(Rectangle())
         }
         .font(.system(size: 20))
-        .foregroundColor(Theme.textPrimary)
+        .foregroundColor(Color(.textPrimary))
         .padding(.vertical, 20)
         .padding(.horizontal, 16)
-        .background(Color.white)
+        .background(Color(.background))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
         .sheet(item: $activeSheet) { sheet in
@@ -54,6 +54,7 @@ struct SettingsMenuView: View {
             }
             .presentationDetents([.medium])
             .presentationCornerRadius(Theme.sheetRadius)
+            .preferredColorScheme(vm.activeColorScheme)
         }
     }
 }

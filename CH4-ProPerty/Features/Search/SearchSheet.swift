@@ -20,7 +20,7 @@ struct SearchSheet: View {
             
             // MARK: - Search Bar Custom
             HStack(spacing: 10) {
-                Image(systemName: "magnifyingglass").foregroundColor(Theme.textSecondary)
+                Image(systemName: "magnifyingglass").foregroundColor(Color(.textSecondary))
                 
                 TextField("Search a location", text: $vm.query)
                     .focused($isFieldFocused)
@@ -33,7 +33,7 @@ struct SearchSheet: View {
                 if vm.isLoading {
                     ProgressView().controlSize(.small)
                 } else {
-                    Image(systemName: "mic.fill").foregroundColor(Theme.textSecondary)
+                    Image(systemName: "mic.fill").foregroundColor(Color(.textSecondary))
                 }
             }
             .padding(.horizontal, 16)
@@ -82,7 +82,7 @@ struct SearchSheet: View {
             .listStyle(.plain)
         }
         .padding(.top, 10)
-        .background(Theme.cardBackground.ignoresSafeArea())
+        .background(Color(.cardBackground).ignoresSafeArea())
         .onAppear {
             isFieldFocused = true
             vm.setCenter(center)
@@ -105,7 +105,7 @@ struct SearchResultRow: View {
                 if let distance = place.distanceLabel {
                     Text(distance)
                         .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(Theme.textSecondary)
+                        .foregroundColor(Color(.textSecondary))
                         .padding(.top, 4)
                         .fixedSize()
                 }
@@ -116,12 +116,12 @@ struct SearchResultRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(place.name)
                     .font(Theme.Typography.section)
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundColor(Color(.textPrimary))
                     .lineLimit(1)
                 
                 Text(place.subtitle)
                     .font(Theme.Typography.subtitle)
-                    .foregroundColor(Theme.textSecondary)
+                    .foregroundColor(Color(.textSecondary))
                     .lineLimit(2)
                     .truncationMode(.tail)
             }
@@ -133,7 +133,7 @@ struct SearchResultRow: View {
             Button(action: onBookmark) {
                 Image(systemName: isBookmarked ? "bookmark.fill" : "bookmark")
                     .font(.system(size: 19))
-                    .foregroundColor(isBookmarked ? Color(red: 0.2, green: 0.2, blue: 0.9) : Theme.primary)
+                    .foregroundColor(isBookmarked ? Color(red: 0.2, green: 0.2, blue: 0.9) : Color(.brand))
             }
             .buttonStyle(.plain)
             .padding(.top, 4)
