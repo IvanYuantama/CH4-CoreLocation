@@ -33,7 +33,6 @@ struct MetricCard: View {
                 icon: icon
             )
         }
-        .padding(.vertical, 12)
     }
 }
 
@@ -147,5 +146,5 @@ struct MetricCard: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 20)
     }
-    .background(Color.white)
+//    .background(Color.white)
 }

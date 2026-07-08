@@ -19,11 +19,11 @@ struct MapModeSheet: View {
             HStack {
                 Text("Map Mode")
                     .font(Theme.Typography.title)
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundColor(Color(.textPrimary))
                 Spacer()
                 Image(systemName: "map")
                     .font(.title2)
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundColor(Color(.textPrimary))
             }
             .padding(.top, 24)
             .padding(.horizontal, 24)
@@ -41,7 +41,7 @@ struct MapModeSheet: View {
             
             Spacer() // Mendorong konten ke atas
         }
-        .background(Theme.background.ignoresSafeArea()) // Selaras dengan AppModeView
+        .background(Color(.background).ignoresSafeArea()) // Selaras dengan AppModeView
     }
 
     private func modeTile(title: String, systemImage: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
@@ -58,12 +58,12 @@ struct MapModeSheet: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 14)
-                            .stroke(Theme.primary, lineWidth: isSelected ? 3 : 0)
+                            .stroke(Color(.brand), lineWidth: isSelected ? 3 : 0)
                     )
 
                 Text(title)
                     .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundColor(Color(.textPrimary))
             }
         }
         .buttonStyle(.plain)

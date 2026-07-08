@@ -15,20 +15,20 @@ struct SmallCard: View {
         HStack(alignment: .center, spacing: 10) {
             // Garis Biru Vertikal di Kiri
             RoundedRectangle(cornerRadius: 20)
-                .fill(Theme.primary)
+                .fill(Color(.brand))
                 .frame(width: 5, height: 37)
 
             // Teks Title & Value
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(Theme.Typography.text)
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundColor(Color(.textPrimary))
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                 
                 Text(value)
                     .font(Theme.Typography.subheading)
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundColor(Color(.textPrimary))
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
@@ -45,5 +45,5 @@ struct SmallCard: View {
         SmallCard(title: "Cellular (Upload)", value: "14.2 Mbps")
     }
     .padding(.horizontal, 20)
-    .background(Color.white)
+//    .background(Color.white)
 }

@@ -15,7 +15,7 @@ struct AppModeView: View {
             HStack {
                 Text("App Mode")
                     .font(Theme.Typography.heading)
-                    .foregroundColor(.textPrimary)
+                    .foregroundColor(Color(.textPrimary))
                 Spacer()
                 Image(systemName: "circle.righthalf.filled")
                     .font(.title2)
@@ -48,7 +48,7 @@ struct AppModeView: View {
             
             Spacer()
         }
-        .background(Color.background.ignoresSafeArea())
+        .background(Color(.background).ignoresSafeArea())
     }
 }
 
