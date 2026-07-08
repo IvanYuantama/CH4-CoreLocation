@@ -9,12 +9,10 @@ import SwiftUI
 
 enum Theme {
     // MARK: - Colors
-    /// Primary Blue (#2F00EE) - mewakili reliability, trust, calm.
     static let primary = Color(hex: 0x2F00EE)
     
-    /// Black & White untuk simplicity dan honesty.
     static let textPrimary = Color.black
-    static let textSecondary = Color.black.opacity(0.5) // Untuk deskripsi/subtitle
+    static let textSecondary = Color.black.opacity(0.5)
     static let background = Color.white
     static let cardBackground = Color(UIColor.systemGray6)
     
@@ -24,18 +22,19 @@ enum Theme {
     
     // MARK: - Typography
     enum Typography {
-        static let heading = Font.system(size: 24, weight: .bold)
-        static let title = Font.system(size: 20, weight: .bold)     // Bold, 20px
-        static let option = Font.system(size: 18, weight: .regular) // Regular, 18px
-        static let section = Font.system(size: 16, weight: .medium) // Medium, 16px
-        static let category = Font.system(size: 14, weight: .medium)// Medium, 14px
-        static let subtitle = Font.system(size: 14, weight: .medium)// Regular, 12px
+        static let title = Font.system(size: 24, weight: .bold)
+        static let heading = Font.system(size: 20, weight: .bold)
+        static let option = Font.system(size: 18, weight: .regular)
+        static let subheading = Font.system(size: 18, weight: .bold)
+        static let section = Font.system(size: 16, weight: .medium)
+        static let subsection = Font.system(size: 16, weight: .regular)
+        static let category = Font.system(size: 14, weight: .regular)
+        static let subtitle = Font.system(size: 14, weight: .medium)
         static let text = Font.system(size: 12, weight: .regular)
-        static let description = Font.system(size: 12, weight: .regular)
+        static let description = Font.system(size: 12, weight: .medium)
     }
 }
 
-// Helper untuk Hex Color
 extension Color {
     init(hex: UInt, alpha: Double = 1.0) {
         self.init(

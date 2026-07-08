@@ -31,9 +31,12 @@ enum OverviewAI {
         allowDirectIndonesian: Bool,
         onPartial: @escaping (String) -> Void
     ) async -> Outcome {
-        guard case .available = SystemLanguageModel.default.availability else { return .unavailable }
+        guard case .available = SystemLanguageModel.default.availability else {
+            print("[OverviewAI] Model tidak tersedia di device ini.")
+            return .unavailable
+        }
 
-        let prompt = promptText(placeName: placeName, subtitle: subtitle, intel: intel)
+        let prompt = promptText(intel: intel)
 
         if preferIndonesian && allowDirectIndonesian {
             if let direct = try? await generate(prompt: prompt, inIndonesian: true, onPartial: onPartial),
@@ -47,6 +50,8 @@ enum OverviewAI {
             guard !english.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return .unavailable }
             return preferIndonesian ? .needsTranslation(english) : .direct(english)
         } catch {
+            // 🌟 Menambahkan print agar kamu bisa melihat error dari Apple Intelligence di Xcode
+            print("[OverviewAI] Generate Error: \(error.localizedDescription)")
             return .unavailable
         }
     }
@@ -71,20 +76,27 @@ enum OverviewAI {
         return latest
     }
 
-    private static func promptText(placeName: String, subtitle: String, intel: PlaceIntel) -> String {
-            let popText = intel.population != nil ? "\(intel.population!) people" : "Unknown"
+    // 🌟 Menghapus parameter placeName dan subtitle agar tidak memicu error bahasa
+    private static func promptText(intel: PlaceIntel) -> String {
+        let popText = intel.population != nil ? "\(intel.population!) people" : "Unknown"
+        let crimeText = intel.crimeTotal != nil ? "\(intel.crimeTotal!) criminal cases reported" : "Unknown"
+        let wifiText = (intel.wifiDownload != nil) ? "\(intel.wifiDownload!) Mbps DL" : "Unknown"
+        let cellText = (intel.mobileDownload != nil) ? "\(intel.mobileDownload!) Mbps DL" : "Unknown"
             
-            return """
-            Area: \(placeName), \(subtitle)
-            Temperature: \(intel.temperatureLevel)
-            Flood risk: \(intel.floodRisk)
-            Air quality: \(intel.airQualityLevel)
-            Elevation: \(intel.elevationLevel)
-            Green space: \(intel.greenSpaces)
-            Road access: \(intel.roadAccess)
-            Public facilities nearby: \(intel.facilityCount)
-            Population: \(popText)
-            """
-        }
+        return """
+        Area: a residential area in Indonesia (refer to it as "this area")
+        Temperature: \(intel.temperatureLevel)
+        Flood risk: \(intel.floodRisk)
+        Air quality: \(intel.airQualityLevel)
+        Elevation: \(intel.elevationLevel)
+        Green space: \(intel.greenSpaces)
+        Road access: \(intel.roadAccess)
+        Public facilities nearby: \(intel.facilityCount)
+        Population: \(popText)
+        Crime Data: \(crimeText)
+        WiFi Network Speed: \(wifiText)
+        Cellular Network Speed: \(cellText)
+        """
+    }
 }
 #endif

@@ -21,12 +21,18 @@ struct SettingsMenuView: View {
             Button { activeSheet = .language } label: {
                 Image(systemName: "translate")
             }
+            .frame(width: 30)
+            .contentShape(Rectangle())
             Button { activeSheet = .mode } label: {
                 Image(systemName: "circle.righthalf.filled")
             }
+            .frame(width: 30)
+            .contentShape(Rectangle())
             Button { activeSheet = .data } label: {
                 Image(systemName: "bubble.left.and.bubble.right")
             }
+            .frame(width: 30)
+            .contentShape(Rectangle())
         }
         .font(.system(size: 20))
         .foregroundColor(.textPrimary)

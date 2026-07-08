@@ -25,7 +25,6 @@ struct LanguagePreferenceView: View {
             .padding(.top, 24)
             .padding(.horizontal, 24)
             
-            
             // Opsi Indonesia
             PreferenceRadioRow(
                 title: "Indonesia",
