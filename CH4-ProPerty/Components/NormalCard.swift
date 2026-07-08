@@ -15,18 +15,18 @@ struct NormalCard: View {
     var body: some View {
         HStack(alignment: .center, spacing: 10) {
             RoundedRectangle(cornerRadius: 20)
-                .fill(Theme.primary)
+                .fill(Color(.brand))
                 .frame(width: 5, height: 37)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(Theme.Typography.text)
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundColor(Color(.textPrimary))
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                 Text(value)
                     .font(Theme.Typography.subheading)
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundColor(Color(.textPrimary))
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
@@ -35,7 +35,7 @@ struct NormalCard: View {
 
             Image(systemName: icon)
                 .font(.system(size: 24))
-                .foregroundStyle(Theme.primary)
+                .foregroundStyle(Color(.brand))
         }
         .frame(width: 165, height: 67)
     }
@@ -47,5 +47,5 @@ struct NormalCard: View {
         NormalCard(title: "Air Quality", value: "Medium", icon: "wind")
     }
     .padding(.horizontal, 20)
-    .background(Color.white)
+//    .background(Color.white)
 }

@@ -17,11 +17,11 @@ struct TallCard: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(Theme.Typography.subsection)
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundColor(Color(.textPrimary))
                     .lineLimit(1)
                 Text(value)
                     .font(Theme.Typography.heading)
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundColor(Color(.textPrimary))
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
 
@@ -31,7 +31,7 @@ struct TallCard: View {
                     Spacer()
                     Image(systemName: decorativeIcon)
                         .font(.system(size: 26))
-                        .foregroundStyle(Theme.primary)
+                        .foregroundStyle(Color(.brand))
                         .padding(.trailing, 16)
                         .padding(.bottom, 4)
                 }
@@ -41,7 +41,7 @@ struct TallCard: View {
             .padding(.leading, 8)
 
             RoundedRectangle(cornerRadius: 20)
-                .fill(Theme.primary)
+                .fill(Color(.brand))
                 .frame(width: 5, height: 106)
                 .padding(.top, 5)
         }
@@ -56,5 +56,5 @@ struct TallCard: View {
             .frame(width: 163, height: 116)
     }
     .padding(.horizontal, 20)
-    .background(Color.white)
+//    .background(Color.white)
 }
