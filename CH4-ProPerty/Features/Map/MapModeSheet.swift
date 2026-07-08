@@ -9,8 +9,6 @@ import SwiftUI
 
 struct MapModeSheet: View {
     @Binding var mapMode: MainMapViewModel.MapMode
-    
-    // Untuk menutup sheet secara native jika diperlukan via tombol
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -28,50 +26,72 @@ struct MapModeSheet: View {
             .padding(.top, 24)
             .padding(.horizontal, 24)
 
-            // MARK: - Tiles Selection
-            HStack(spacing: 20) {
-                modeTile(title: "Explore", systemImage: "map.fill", isSelected: mapMode == .explore) {
+            // MARK: - Tiles
+            HStack(spacing: 16) {
+                modeTile(
+                    title: "Explore",
+                    imageName: "explore",
+                    isSelected: mapMode == .explore
+                ) {
                     mapMode = .explore
+                    dismiss()
                 }
-                modeTile(title: "Satellite", systemImage: "globe.americas.fill", isSelected: mapMode == .satellite) {
+
+                modeTile(
+                    title: "Satellite",
+                    imageName: "satellite",
+                    isSelected: mapMode == .satellite
+                ) {
                     mapMode = .satellite
+                    dismiss()
                 }
             }
             .padding(.horizontal, 24)
-            
-            Spacer() // Mendorong konten ke atas
+
+            Spacer()
         }
-        .background(Theme.background.ignoresSafeArea()) // Selaras dengan AppModeView
+        .background(Theme.background.ignoresSafeArea())
     }
 
-    private func modeTile(title: String, systemImage: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+    private func modeTile(
+        title: String,
+        imageName: String,
+        isSelected: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
-            VStack(spacing: 8) {
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(Color(UIColor.secondarySystemBackground))
-                    .frame(height: 90)
+            VStack(spacing: 10) {
+                Image(imageName)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 120)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
                     .overlay(
-                        // TODO: Ganti Image(systemName:) dengan asset gambar (Image("...")) nanti
-                        Image(systemName: systemImage)
-                            .font(.system(size: 28))
-                            .foregroundColor(.secondary)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14)
-                            .stroke(Theme.primary, lineWidth: isSelected ? 3 : 0)
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(
+                                isSelected ? Theme.primary : Color.clear,
+                                lineWidth: 3
+                            )
                     )
 
                 Text(title)
-                    .font(.system(size: 15, weight: .medium))
+                    .font(Theme.Typography.section)
                     .foregroundColor(Theme.textPrimary)
             }
         }
         .buttonStyle(.plain)
+        .frame(maxWidth: .infinity)
     }
 }
 
 #Preview {
-    // Preview menggunakan Text dummy untuk mensimulasikan file MainMapViewModel
-    // Asumsi MainMapViewModel.MapMode memiliki enum .explore
-    MapModeSheet(mapMode: .constant(.explore))
+    Color.gray.opacity(0.3)
+        .ignoresSafeArea()
+        .sheet(isPresented: .constant(true)) {
+            MapModeSheet(mapMode: .constant(.explore))
+                .presentationDetents([.height(260)])
+                .presentationCornerRadius(30)
+                .presentationDragIndicator(.visible)
+        }
 }

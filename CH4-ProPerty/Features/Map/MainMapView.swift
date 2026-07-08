@@ -161,7 +161,7 @@ struct MainMapView: View {
                         set: { vm.selectMapMode($0) }
                     )
                 )
-                .presentationDetents([.height(260)])
+                .presentationDetents([.height(280)])
                 .presentationCornerRadius(Theme.sheetRadius)
                 .presentationDragIndicator(.visible)
             }
