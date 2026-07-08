@@ -19,12 +19,12 @@ struct SplashView: View {
             
             Text("Consider your property like a professional")
                 .font(.footnote)
-                .foregroundStyle(Theme.textSecondary)
+                .foregroundStyle(.textSecondary)
             
             // Kita hapus juga Spacer() di bawah
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity) // Memaksa VStack mengisi seluruh layar
-        .background(Theme.background)
+        .background(Color.background)
         .ignoresSafeArea()
     }
 }

@@ -20,7 +20,7 @@ struct SearchSheet: View {
             
             // MARK: - Search Bar Custom
             HStack(spacing: 10) {
-                Image(systemName: "magnifyingglass").foregroundColor(Theme.textSecondary)
+                Image(systemName: "magnifyingglass").foregroundColor(.textSecondary)
                 
                 TextField("Search a location", text: $vm.query)
                     .focused($isFieldFocused)
@@ -33,7 +33,7 @@ struct SearchSheet: View {
                 if vm.isLoading {
                     ProgressView().controlSize(.small)
                 } else {
-                    Image(systemName: "mic.fill").foregroundColor(Theme.textSecondary)
+                    Image(systemName: "mic.fill").foregroundColor(.textSecondary)
                 }
             }
             .padding(.horizontal, 16)
@@ -116,7 +116,7 @@ struct SearchResultRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(place.name)
                     .font(Theme.Typography.section)
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundColor(.textPrimary)
                     .lineLimit(1)
                 
                 Text(place.subtitle)

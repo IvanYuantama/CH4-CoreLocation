@@ -33,6 +33,7 @@ struct MetricCard: View {
                 icon: icon
             )
         }
+        .padding(.vertical, 12)
     }
 }
 

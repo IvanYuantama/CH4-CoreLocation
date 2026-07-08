@@ -43,7 +43,7 @@ struct PlaceDetailView: View {
             .padding(.horizontal, 20)
             .padding(.bottom, 30)
         }
-        .background(Theme.background.ignoresSafeArea())
+        .background(Color.background.ignoresSafeArea())
         .translationTask(vm.translationConfig) { session in
             await vm.processTranslation(session: session)
         }
@@ -72,9 +72,9 @@ struct PlaceDetailView: View {
             Button { dismiss() } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundColor(.textPrimary)
                     .frame(width: 44, height: 44)
-                    .background(Theme.cardBackground)
+                    .background(.cardBackground)
                     .clipShape(Circle())
             }
         }
@@ -143,7 +143,7 @@ struct PlaceDetailView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Overview")
                 .font(Theme.Typography.option)
-                .foregroundColor(Theme.textPrimary)
+                .foregroundColor(.textPrimary)
             
             let displayText = vm.translatedOverview ?? vm.aiOverview ?? "Analyzing property environment parameters..."
             
@@ -157,7 +157,7 @@ struct PlaceDetailView: View {
                     ProgressView().controlSize(.small)
                     Text("Summarizing with Apple Intelligence...")
                         .font(Theme.Typography.subtitle)
-                        .foregroundColor(Theme.primary)
+                        .foregroundColor(.brand)
                 }
                 .padding(.top, 4)
             }
@@ -170,7 +170,7 @@ struct PlaceDetailView: View {
         VStack(alignment: .leading, spacing: 24) {
             Text("Details")
                 .font(Theme.Typography.title)
-                .foregroundColor(Theme.textPrimary)
+                .foregroundColor(.textPrimary)
             
             let envCards = generateEnvironmentCards(intel: intel)
             if !envCards.isEmpty {
@@ -216,7 +216,7 @@ struct PlaceDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(Theme.Typography.section)
-                .foregroundColor(Theme.textPrimary)
+                .foregroundColor(.textPrimary)
             
             let paired = pairCards(cards)
             
