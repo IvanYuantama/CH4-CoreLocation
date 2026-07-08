@@ -16,7 +16,7 @@ struct LanguagePreferenceView: View {
             // Header
             HStack {
                 Text("Language Preference")
-                    .font(Theme.Typography.heading)
+                    .font(Theme.Typography.title)
                     .foregroundColor(Theme.textPrimary)
                 Spacer()
                 Image(systemName: "translate")
@@ -24,7 +24,6 @@ struct LanguagePreferenceView: View {
             }
             .padding(.top, 24)
             .padding(.horizontal, 24)
-            
             
             // Opsi Indonesia
             PreferenceRadioRow(

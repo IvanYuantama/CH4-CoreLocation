@@ -10,10 +10,9 @@ import Combine
 
 @MainActor
 class SettingsViewModel: ObservableObject {
-    @AppStorage("selectedLanguage") var selectedLanguage: String = "id"
+    @AppStorage("appLanguage") var selectedLanguage: String = "en"
     @AppStorage("appColorScheme") var appColorScheme: String = "system"
     
-    // Data Preferences
     @AppStorage("showTemperature") var showTemperature: Bool = true
     @AppStorage("showFloodRisk") var showFloodRisk: Bool = true
     @AppStorage("showAirQuality") var showAirQuality: Bool = true
@@ -23,6 +22,8 @@ class SettingsViewModel: ObservableObject {
     @AppStorage("showPopulation") var showPopulation: Bool = true
     @AppStorage("showFamilies") var showFamilies: Bool = true
     @AppStorage("showElevation") var showElevation: Bool = true
+    @AppStorage("showCrimeData") var showCrimeData: Bool = true
+    @AppStorage("showNetworkData") var showNetworkData: Bool = true
     
     var activeColorScheme: ColorScheme? {
         switch appColorScheme {

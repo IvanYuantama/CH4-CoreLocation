@@ -12,24 +12,25 @@ struct DataPreferenceView: View {
     
     var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 0) { // Spacing 0 agar Divider merapat
+            VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     Text("Data Preferences")
-                        .font(Theme.Typography.heading)
+                        .font(Theme.Typography.title)
                         .foregroundColor(Theme.textPrimary)
                     Spacer()
                     Image(systemName: "bubble.left.and.bubble.right")
                         .font(.title2)
+                        .foregroundColor(Theme.textPrimary)
                 }
                 .padding(.top, 24)
                 .padding(.horizontal, 24)
                 .padding(.bottom, 20)
                 
                 Group {
-                    PreferenceRadioRow(title: "Temperature", subtitle: "Display the average temperature (Low - High)", isSelected: vm.showTemperature) { vm.showTemperature.toggle() }
+                    PreferenceRadioRow(title: "Temperature", subtitle: "Display the average temperature", isSelected: vm.showTemperature) { vm.showTemperature.toggle() }
                     
                     Divider().padding(.leading, 24)
-                    PreferenceRadioRow(title: "Flood Risk", subtitle: "Display the risk of flooding (Low - High)", isSelected: vm.showFloodRisk) { vm.showFloodRisk.toggle() }
+                    PreferenceRadioRow(title: "Flood Risk", subtitle: "Display the risk of flooding", isSelected: vm.showFloodRisk) { vm.showFloodRisk.toggle() }
                     
                     Divider().padding(.leading, 24)
                     PreferenceRadioRow(title: "Air Quality", subtitle: "Display the air quality level", isSelected: vm.showAirQuality) { vm.showAirQuality.toggle() }
@@ -51,6 +52,14 @@ struct DataPreferenceView: View {
                     
                     Divider().padding(.leading, 24)
                     PreferenceRadioRow(title: "Elevation", subtitle: "Display geography elevation level", isSelected: vm.showElevation) { vm.showElevation.toggle() }
+                    
+                    // 🌟 BARU: Toggle untuk Crime
+                    Divider().padding(.leading, 24)
+                    PreferenceRadioRow(title: "Crime Data", subtitle: "Display reported criminal cases", isSelected: vm.showCrimeData) { vm.showCrimeData.toggle() }
+                    
+                    // 🌟 BARU: Toggle untuk Network
+                    Divider().padding(.leading, 24)
+                    PreferenceRadioRow(title: "Network Connectivity", subtitle: "Display WiFi and Cellular speeds", isSelected: vm.showNetworkData) { vm.showNetworkData.toggle() }
                 }
                 
                 Spacer(minLength: 40)

@@ -18,12 +18,18 @@ struct PlaceIntel {
     var families: Int? = nil
     var elevationLevel: String = "Unknown"
     var crimeLevel: String = "Unknown"
-    
-    // Fasilitas Publik Dinamis
+    var crimeTotal: Int? = nil
+    var crimeClearanceRate: Double? = nil
+    var wifiDownload: Double? = nil
+    var wifiUpload: Double? = nil
+    var mobileDownload: Double? = nil
+    var mobileUpload: Double? = nil
     var hasSchool: Bool = false
     var hasHospital: Bool = false
     var hasPolice: Bool = false
     var facilityCount: Int = 0
+    
+    var isSample: Bool = false
 }
 
 extension PlaceIntel {
@@ -38,10 +44,20 @@ extension PlaceIntel {
             families: 16798,
             elevationLevel: "Highland",
             crimeLevel: "Low",
+            
+            crimeTotal: 1027,
+            crimeClearanceRate: 79.85,
+            wifiDownload: 68.9,
+            wifiUpload: 52.7,
+            mobileDownload: 30.9,
+            mobileUpload: 14.2,
+            
             hasSchool: true,
             hasHospital: true,
-            hasPolice: false,
-            facilityCount: 28
+            hasPolice: true,
+            facilityCount: 28,
+            
+            isSample: true
         )
     }
 }

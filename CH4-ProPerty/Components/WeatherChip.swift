@@ -12,27 +12,30 @@ struct WeatherChip: View {
     let label: String
     
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 4) { 
             Image(systemName: icon)
                 .foregroundStyle(Theme.primary)
-                .font(.system(size: 14))
+                .font(.system(size: 14, weight: .bold))
             
             Text(label)
-                .font(Theme.Typography.subtitle)
+                .font(Theme.Typography.category)
                 .foregroundColor(Theme.textPrimary)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(Color.white)
-        .clipShape(Capsule())
-        .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
+        .frame(width: 70, height: 28)
+        .background(Color(UIColor.systemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
     }
 }
 
 #Preview {
     ZStack {
-        // Background abu-abu agar chip putihnya terlihat jelas
         Color(UIColor.systemGray6).ignoresSafeArea()
-        WeatherChip(icon: "thermometer.sun", label: "28°C")
+        
+        HStack(spacing: 12) {
+            WeatherChip(icon: "sun.max.fill", label: "16°C")
+            WeatherChip(icon: "humidity", label: "59%")
+            WeatherChip(icon: "sun.min", label: "1 UV")
+        }
     }
 }

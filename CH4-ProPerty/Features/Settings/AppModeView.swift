@@ -14,7 +14,7 @@ struct AppModeView: View {
         VStack(alignment: .leading, spacing: 20) {
             HStack {
                 Text("App Mode")
-                    .font(Theme.Typography.heading)
+                    .font(Theme.Typography.title)
                     .foregroundColor(Theme.textPrimary)
                 Spacer()
                 Image(systemName: "circle.righthalf.filled")

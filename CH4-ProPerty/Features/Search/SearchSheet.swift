@@ -10,7 +10,6 @@ import MapKit
 
 struct SearchSheet: View {
     let center: CLLocationCoordinate2D
-    @Binding var bookmarks: Set<String>
     let onSelect: (PlaceResult) -> Void
     
     @StateObject private var vm = SearchViewModel()
@@ -18,21 +17,18 @@ struct SearchSheet: View {
     
     var body: some View {
         VStack(spacing: 0) {
-//            Capsule()
-//                .fill(Color(UIColor.systemGray4))
-//                .frame(width: 40, height: 4)
-//                .padding(.top, 10)
             
+            // MARK: - Search Bar Custom
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass").foregroundColor(Theme.textSecondary)
                 
                 TextField("Search a location", text: $vm.query)
                     .focused($isFieldFocused)
-                    .font(Theme.Typography.section)
+                    .font(.body)
+                    .textCase(nil)
+                    .textInputAutocapitalization(.never) // Mengikuti status asli tombol caps lock keyboard user
+                    .disableAutocorrection(true)
                     .submitLabel(.search)
-                    .onSubmit {
-                        vm.runSearch(around: center)
-                    }
                 
                 if vm.isLoading {
                     ProgressView().controlSize(.small)
@@ -42,7 +38,7 @@ struct SearchSheet: View {
             }
             .padding(.horizontal, 16)
             .frame(height: 50)
-            .background(Color.white)
+            .background(Color(UIColor.systemBackground))
             .clipShape(Capsule())
             .shadow(color: .black.opacity(0.05), radius: 3, y: 1)
             .padding(.horizontal, 20)
@@ -54,58 +50,47 @@ struct SearchSheet: View {
                     .font(Theme.Typography.subtitle)
                     .foregroundColor(.red)
                     .padding(.horizontal, 20)
+                    .padding(.bottom, 8)
             }
 
-            if vm.results.isEmpty {
-                List(vm.completer.suggestions, id: \.self) { suggestion in
-                    Button {
-                        vm.runSearch(completion: suggestion, center: center)
-                    } label: {
-                        HStack(spacing: 16) {
-                            Image(systemName: "magnifyingglass.circle.fill")
-                                .font(.title2)
-                                .foregroundColor(Theme.textSecondary)
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(suggestion.title)
-                                    .font(Theme.Typography.section)
-                                    .foregroundColor(Theme.textPrimary)
-                                if !suggestion.subtitle.isEmpty {
-                                    Text(suggestion.subtitle)
-                                        .font(Theme.Typography.subtitle)
-                                        .foregroundColor(Theme.textSecondary)
-                                        .lineLimit(1)
-                                }
-                            }
-                        }
-                        .padding(.vertical, 8)
+            // MARK: - List Tampilan Lokasi (Clean Style)
+            List {
+                if vm.query.isEmpty {
+                    // Menampilkan daftar bookmark secara bersih jika kolom pencarian kosong
+                    ForEach(vm.savedPlaces) { place in
+                        SearchResultRow(
+                            place: place,
+                            isBookmarked: true,
+                            onBookmark: { vm.toggleBookmark(for: place) },
+                            onTap: { onSelect(place) }
+                        )
+                        .listRowSeparator(.hidden)
                     }
-                    .buttonStyle(.plain)
+                } else {
+                    // Menampilkan hasil pencarian fuzzy sedunia yang diurutkan kombinasi relevansi & jarak
+                    ForEach(vm.results) { place in
+                        SearchResultRow(
+                            place: place,
+                            isBookmarked: vm.isBookmarked(place),
+                            onBookmark: { vm.toggleBookmark(for: place) },
+                            onTap: { onSelect(place) }
+                        )
+                        .listRowSeparator(.hidden)
+                    }
                 }
-                .listStyle(.plain)
-            } else {
-                List(vm.results) { place in
-                    SearchResultRow(
-                        place: place,
-                        isBookmarked: bookmarks.contains(place.name),
-                        onBookmark: { vm.toggleBookmark(for: place, in: &bookmarks) },
-                        onTap: { onSelect(place) }
-                    )
-                    .listRowSeparator(.hidden) // Membuang garis separator bawaan Apple agar lebih clean
-                }
-                .listStyle(.plain)
             }
+            .listStyle(.plain)
         }
         .padding(.top, 10)
-        .background(Theme.cardBackground.ignoresSafeArea()) // Menggunakan abu-abu muda khas iOS
-        .onAppear { isFieldFocused = true }
-        .onChange(of: vm.query) { _, _ in
-            vm.updateQuery(around: center)
+        .background(Theme.cardBackground.ignoresSafeArea())
+        .onAppear {
+            isFieldFocused = true
+            vm.setCenter(center)
         }
     }
 }
 
-// MARK: - Row Hasil Pencarian (Sesuai iPhone 2)
+// MARK: - Row Hasil Pencarian Custom Pin Marker & Jarak
 struct SearchResultRow: View {
     let place: PlaceResult
     let isBookmarked: Bool
@@ -114,20 +99,20 @@ struct SearchResultRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
-            // Komponen Kiri: Pin & Jarak
-            VStack(spacing: 4) {
+            VStack(spacing: 0) {
                 CustomPinMarker()
-                    .padding(.top, 4)
                 
                 if let distance = place.distanceLabel {
                     Text(distance)
-                        .font(Theme.Typography.subtitle)
+                        .font(.system(size: 10, weight: .medium))
                         .foregroundColor(Theme.textSecondary)
+                        .padding(.top, 4)
+                        .fixedSize()
                 }
             }
-            .frame(width: 45) // Lebar tetap agar sejajar
+            .frame(width: 45)
 
-            // Komponen Tengah: Teks
+            // MARK: Komponen Tengah: Teks Informasi Alamat
             VStack(alignment: .leading, spacing: 4) {
                 Text(place.name)
                     .font(Theme.Typography.section)
@@ -135,56 +120,34 @@ struct SearchResultRow: View {
                     .lineLimit(1)
                 
                 Text(place.subtitle)
-                    .font(Theme.Typography.category)
+                    .font(Theme.Typography.subtitle)
                     .foregroundColor(Theme.textSecondary)
-                    .lineLimit(2) // Sesuai desain, subtitle bisa cukup panjang
+                    .lineLimit(2)
+                    .truncationMode(.tail)
             }
             .padding(.top, 2)
             
             Spacer()
             
-            // Komponen Kanan: Bookmark
+            // MARK: Komponen Kanan: Tombol Simpan/Bookmark
             Button(action: onBookmark) {
                 Image(systemName: isBookmarked ? "bookmark.fill" : "bookmark")
-                    .font(.system(size: 20))
-                    .foregroundColor(Theme.primary)
+                    .font(.system(size: 19))
+                    .foregroundColor(isBookmarked ? Color(red: 0.2, green: 0.2, blue: 0.9) : Theme.primary)
             }
             .buttonStyle(.plain)
             .padding(.top, 4)
+            .padding(.trailing, 4)
         }
         .contentShape(Rectangle())
         .onTapGesture(perform: onTap)
-        .padding(.vertical, 12)
-        // Menambahkan separator manual yang lebih rapi di bawah row
+        .padding(.vertical, 10)
         .overlay(
             Rectangle()
-                .fill(Color(UIColor.separator).opacity(0.5))
+                .fill(Color(UIColor.separator).opacity(0.4))
                 .frame(height: 1),
             alignment: .bottom
         )
     }
 }
 
-#Preview("Search Sheet") {
-    SearchSheet(
-        center: CLLocationCoordinate2D(latitude: -8.65, longitude: 115.16),
-        bookmarks: .constant([]),
-        onSelect: { _ in }
-    )
-}
-
-#Preview("Search Row") {
-    SearchResultRow(
-        place: PlaceResult(
-            name: "Kuta",
-            subtitle: "Kabupaten Badung, Bali, Indonesia",
-            latitude: -8.7263,
-            longitude: 115.1776,
-            distanceKm: 1.7
-        ),
-        isBookmarked: true,
-        onBookmark: {},
-        onTap: {}
-    )
-    .padding()
-}

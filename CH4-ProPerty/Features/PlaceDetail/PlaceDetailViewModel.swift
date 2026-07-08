@@ -22,9 +22,12 @@ class PlaceDetailViewModel: ObservableObject {
     @Published var errorMessage: String?
     
     @AppStorage("directIndonesianFailed") var directIndonesianFailed = false
+
+    @AppStorage("appLanguage") private var appLanguage: String = "en"
     
     let place: PlaceResult
-    var prefersIndonesian: Bool { Locale.current.language.languageCode?.identifier == "id" }
+    
+    var prefersIndonesian: Bool { appLanguage == "id" }
     
     init(place: PlaceResult) {
         self.place = place
@@ -89,6 +92,8 @@ class PlaceDetailViewModel: ObservableObject {
             longitude: 115.1385,
             distanceKm: 10.0
         ))
+        
+        // Memperbarui data mock untuk preview sesuai dengan desain HiFi
         vm.intel = PlaceIntel(
             temperatureLevel: "Low",
             floodRisk: "High",
@@ -99,11 +104,21 @@ class PlaceDetailViewModel: ObservableObject {
             families: 16798,
             elevationLevel: "Lowland",
             crimeLevel: "Low",
+            
+            // Properti baru
+            crimeTotal: 1027,
+            crimeClearanceRate: 79.85,
+            wifiDownload: 68.9,
+            wifiUpload: 52.7,
+            mobileDownload: 30.9,
+            mobileUpload: 14.2,
+            
             hasSchool: true,
             hasHospital: true,
             hasPolice: true,
             facilityCount: 28
         )
+        
         vm.aiOverview = "This area offers good accessibility with major roads nearby and 28 public facilities within 2 km. Water quality is moderate (72/100), while air quality is fair (AQI 118). The elevation is 35 m above sea level with an average temperature of 27.4°C. A low crime rate and 41% green space support a comfortable environment"
         vm.isFetchingIntel = false
         vm.isSummarizing = false
