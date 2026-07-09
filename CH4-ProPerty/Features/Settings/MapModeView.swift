@@ -30,10 +30,10 @@ struct MapModeView: View {
 
             // MARK: - Tiles Selection
             HStack(spacing: 20) {
-                modeTile(title: "Explore", systemImage: "map.fill", isSelected: mapMode == .explore) {
+                modeTile(title: "Explore", imageName: "explore", isSelected: mapMode == .explore) {
                     mapMode = .explore
                 }
-                modeTile(title: "Satellite", systemImage: "globe.americas.fill", isSelected: mapMode == .satellite) {
+                modeTile(title: "Satellite", imageName: "satellite", isSelected: mapMode == .satellite) {
                     mapMode = .satellite
                 }
             }
@@ -44,7 +44,7 @@ struct MapModeView: View {
         .background(Color(.background).ignoresSafeArea()) // Selaras dengan AppModeView
     }
 
-    private func modeTile(title: String, systemImage: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+    private func modeTile(title: String, imageName: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 8) {
                 RoundedRectangle(cornerRadius: 14)
@@ -52,9 +52,8 @@ struct MapModeView: View {
                     .frame(height: 90)
                     .overlay(
                         // TODO: Ganti Image(systemName:) dengan asset gambar (Image("...")) nanti
-                        Image(systemName: systemImage)
-                            .font(.system(size: 28))
-                            .foregroundColor(.secondary)
+                        Image(imageName)
+                            .resizable()
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 14)
@@ -69,13 +68,6 @@ struct MapModeView: View {
         .buttonStyle(.plain)
     }
 }
-
-#Preview {
-    // Preview menggunakan Text dummy untuk mensimulasikan file MainMapViewModel
-    // Asumsi MainMapViewModel.MapMode memiliki enum .explore
-    MapModeView(mapMode: .constant(.explore))
-}
-
 
 #Preview {
 MapModeView(mapMode: .constant(.explore))

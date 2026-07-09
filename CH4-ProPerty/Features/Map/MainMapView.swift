@@ -71,15 +71,6 @@ struct MainMapView: View {
                 }
                 .mapStyle(vm.mapStyle)
                 .mapControls {
-                    // WAJIB di dalam .mapControls{} supaya .automatic benar-benar berfungsi —
-                    // sebagai view berdiri sendiri di luar sini (walau scope sama), auto-show
-                    // dan tap-to-reset-nya tidak reliable (terbukti dari testing Experiment project).
-                    // Konsekuensi: posisi jadi ditentukan sistem, bukan custom di anchorStack lagi.
-                    MapCompass(scope: mapScope)
-                        .mapControlVisibility(.automatic)
-                    MapPitchToggle(scope: mapScope)
-                        .mapControlVisibility(.automatic)
-                    // Disembunyikan — kita pakai anchor button custom sendiri, bukan native ini.
                     MapScaleView(scope: mapScope)
                         .mapControlVisibility(.hidden)
                     MapUserLocationButton(scope: mapScope)
@@ -193,6 +184,7 @@ struct MainMapView: View {
                         state: $searchSheetState,
                         onSelect: vm.selectPlace
                     )
+                    .offset(x:2 ,y: 35)
 
                     if searchSheetState == .collapsed {
                         HStack {

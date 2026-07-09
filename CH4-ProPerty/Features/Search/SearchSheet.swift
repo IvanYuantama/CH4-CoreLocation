@@ -2,7 +2,7 @@
 //  SearchSheet.swift
 //  CH4-ProPerty
 //
-//  Created by Andhika Satria on 05/07/26.
+//  Created by Andhika Satria on 09/07/26.
 //
 
 import SwiftUI
@@ -40,7 +40,6 @@ struct SearchSheet: View {
         .listStyle(.plain)
         .safeAreaInset(edge: .top) {
             // Memanggil Search Bar Custom di bagian atas
-            searchField
         }
         .background(Color(.cardBackground).ignoresSafeArea())
         .onAppear { vm.setCenter(center) }
@@ -69,37 +68,6 @@ struct SearchSheet: View {
             detent = .height(64)
         }
         onSelect(place)
-    }
-
-    // MARK: - Search Bar Custom
-    private var searchField: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass").foregroundColor(Color(.textSecondary))
-            
-            // Kolom input teks
-            TextField(L.t(.searchLocation), text: $vm.query)
-                .focused($isFieldFocused)
-                .font(.body)
-                .textCase(nil)
-                .textInputAutocapitalization(.never)
-                .disableAutocorrection(true)
-                .submitLabel(.search)
-            
-            // Indikator loading atau icon mic
-            if vm.isLoading {
-                ProgressView().controlSize(.small)
-            } else {
-                Image(systemName: "mic.fill").foregroundColor(Color(.textSecondary))
-            }
-        }
-        .padding(.horizontal, 16)
-        .frame(height: 50)
-        .background(Color(UIColor.systemBackground))
-        .clipShape(Capsule())
-        .padding(.horizontal, 20)
-        .padding(.vertical, 10)
-        .background(Color(.cardBackground))
-        .offset(y: 5)
     }
 }
 

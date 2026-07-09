@@ -173,6 +173,8 @@ enum L {
         "arterial":  ["id": "Arteri"],
         "local":     ["id": "Lokal"],
         "highway":   ["id": "Jalan Raya"],
+        "other":    ["id": "Lainnya"],
+        "footoath":  ["id": "Trotoar"],
 
         "highland": ["id": "D. Tinggi"],
         "lowland":  ["id": "D. Rendah"],
