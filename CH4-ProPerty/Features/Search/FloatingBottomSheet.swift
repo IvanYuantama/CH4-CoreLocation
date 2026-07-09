@@ -179,6 +179,7 @@ struct FloatingSearchSheet: View {
                 .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)
                 .submitLabel(.search)
+                .font(.system(size: 14))
             if vm.isLoading {
                 ProgressView().controlSize(.small)
             } else {
