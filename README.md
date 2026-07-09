@@ -126,10 +126,12 @@ The challenge response reflects this: _Create an app that utilizes Location Mana
 
 ### About Accessibility and Localization
 
+We implement 2 accesibility features, Dark Mode and Text Size. User can choose what they want for light mode or dark mode based on their preference for comfort. And also we use text size, for users that have visual impairments that maybe they want or prefer bigger text size.
+
 We localized the app in two languages, English and Bahasa Indonesia. The target users for this app is Indonesian people who want buy property and tourism people who want rent property, so supporting both languages ensures the app is accessible to the full audience.
 
 ### About Privacy
 
 The app requests a single permission Location Access, which allows GPS location run only while the app is in the foreground. Location data is sent to our own backend API for spatial analysis.
 
-If the user denies location permission, the map will display but can't analyze the place that the user now there. A card is shown to guide the user to enable location access in Settings. Everything else in the app still works normally.
+If the user denies location permission, the map will display but can't analyze the place that the user now there. However, users can still explore the map manually, select any location by tapping on the map, and view the corresponding property analysis and environmental information for those selected locations.
