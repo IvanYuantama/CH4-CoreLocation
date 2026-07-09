@@ -52,7 +52,9 @@ class MainMapViewModel: ObservableObject {
     @Published var showSearch = false
     @Published var pinned: PlaceResult?
     @Published var detail: PlaceResult?
+    // Variabel bookmarks dihapus dari sini karena sudah diurus oleh SearchViewModel
 
+    /// Dipakai di `.mapStyle(vm.mapStyle)` — hybrid = citra satelit tapi nama jalan/label tetap ada.
     var mapStyle: MapStyle {
         mapMode == .satellite ? .hybrid : .standard
     }

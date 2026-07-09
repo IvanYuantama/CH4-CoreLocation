@@ -9,58 +9,51 @@ import SwiftUI
 
 struct MapModeSheet: View {
     @Binding var mapMode: MainMapViewModel.MapMode
-    
-    // Untuk menutup sheet secara native jika diperlukan via tombol
     @Environment(\.dismiss) private var dismiss
+    @AppStorage("appLanguage") private var lang: String = "en"
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            // MARK: - Header
             HStack {
-                Text("Map Mode")
+                Text(L.t(.mapMode, lang))
                     .font(Theme.Typography.title)
                     .foregroundColor(Color(.textPrimary))
                 Spacer()
-                Image(systemName: "map")
-                    .font(.title2)
-                    .foregroundColor(Color(.textPrimary))
+                Image(systemName: "map").font(.title2).foregroundColor(Color(.textPrimary))
             }
             .padding(.top, 24)
             .padding(.horizontal, 24)
 
-            // MARK: - Tiles Selection
             HStack(spacing: 20) {
-                modeTile(title: "Explore", systemImage: "map.fill", isSelected: mapMode == .explore) {
+                modeTile(title: L.t(.explore, lang), imageName: "explore", isSelected: mapMode == .explore) {
                     mapMode = .explore
                 }
-                modeTile(title: "Satellite", systemImage: "globe.americas.fill", isSelected: mapMode == .satellite) {
+                modeTile(title: L.t(.satellite, lang), imageName: "satellite", isSelected: mapMode == .satellite) {
                     mapMode = .satellite
                 }
             }
             .padding(.horizontal, 24)
-            
-            Spacer() // Mendorong konten ke atas
+
+            Spacer()
         }
-        .background(Color(.background).ignoresSafeArea()) // Selaras dengan AppModeView
+        .background(Color(.background).ignoresSafeArea())
     }
 
-    private func modeTile(title: String, systemImage: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+    private func modeTile(title: String, imageName: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 8) {
                 RoundedRectangle(cornerRadius: 14)
                     .fill(Color(UIColor.secondarySystemBackground))
                     .frame(height: 90)
                     .overlay(
-                        // TODO: Ganti Image(systemName:) dengan asset gambar (Image("...")) nanti
-                        Image(systemName: systemImage)
-                            .font(.system(size: 28))
-                            .foregroundColor(.secondary)
+                        // Gunakan gambar kustom dari Assets
+                        Image(imageName)
+                            .resizable()
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 14)
                             .stroke(Color(.brand), lineWidth: isSelected ? 3 : 0)
                     )
-
                 Text(title)
                     .font(.system(size: 15, weight: .medium))
                     .foregroundColor(Color(.textPrimary))
@@ -71,7 +64,5 @@ struct MapModeSheet: View {
 }
 
 #Preview {
-    // Preview menggunakan Text dummy untuk mensimulasikan file MainMapViewModel
-    // Asumsi MainMapViewModel.MapMode memiliki enum .explore
     MapModeSheet(mapMode: .constant(.explore))
 }

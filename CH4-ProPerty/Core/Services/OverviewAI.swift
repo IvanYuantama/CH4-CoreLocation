@@ -13,9 +13,8 @@ import FoundationModels
 @MainActor
 enum OverviewAI {
     enum Outcome {
-        case direct(String)
-        case needsTranslation(String)
-        case unavailable
+        case direct(String)           // teks final siap tampil dalam bahasa target
+        case needsTranslation(String) // teks English AI yang perlu diterjemah ke ID
     }
 
     static func prewarm() {
@@ -23,66 +22,61 @@ enum OverviewAI {
         LanguageModelSession(model: .default).prewarm(promptPrefix: nil)
     }
 
+    /// Bahasa hasil ditentukan `preferIndonesian` (dari setting APP) — BUKAN bahasa device.
     static func summarize(
-        placeName: String,
-        subtitle: String,
         intel: PlaceIntel,
         preferIndonesian: Bool,
-        allowDirectIndonesian: Bool,
         onPartial: @escaping (String) -> Void
     ) async -> Outcome {
+        // Apple Intelligence tak tersedia (device tak dukung / AI dimatikan / bahasa device
+        // tak didukung) → template deterministik dalam bahasa APP.
         guard case .available = SystemLanguageModel.default.availability else {
-            print("[OverviewAI] Model tidak tersedia di device ini.")
-            return .unavailable
-        }
-
-        let prompt = promptText(intel: intel)
-
-        if preferIndonesian && allowDirectIndonesian {
-            if let direct = try? await generate(prompt: prompt, inIndonesian: true, onPartial: onPartial),
-               !direct.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                return .direct(direct)
-            }
+            print("[OverviewAI] Apple Intelligence unavailable — pakai template \(preferIndonesian ? "ID" : "EN").")
+            return .direct(PlaceOverviewComposer.summary(for: intel, indonesian: preferIndonesian))
         }
 
         do {
-            let english = try await generate(prompt: prompt, inIndonesian: false, onPartial: onPartial)
-            guard !english.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return .unavailable }
+            // Selalu generate English lebih dulu (paling andal untuk model on-device,
+            // apa pun bahasa device).
+            let english = try await generateEnglish(intel: intel, onPartial: onPartial)
+            let trimmed = english.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else {
+                return .direct(PlaceOverviewComposer.summary(for: intel, indonesian: preferIndonesian))
+            }
+            // EN → tampil langsung; ID → minta ViewModel menerjemahkan via Apple Translation.
             return preferIndonesian ? .needsTranslation(english) : .direct(english)
         } catch {
-            // 🌟 Menambahkan print agar kamu bisa melihat error dari Apple Intelligence di Xcode
-            print("[OverviewAI] Generate Error: \(error.localizedDescription)")
-            return .unavailable
+            print("[OverviewAI] Generate error: \(error.localizedDescription) — fallback template.")
+            return .direct(PlaceOverviewComposer.summary(for: intel, indonesian: preferIndonesian))
         }
     }
 
-    private static func generate(prompt: String, inIndonesian: Bool, onPartial: @escaping (String) -> Void) async throws -> String {
-        let languageLine = inIndonesian ? "Write the paragraph in Bahasa Indonesia." : "Write the paragraph in English."
+    private static func generateEnglish(
+        intel: PlaceIntel,
+        onPartial: @escaping (String) -> Void
+    ) async throws -> String {
         let session = LanguageModelSession(
             model: .default,
             instructions: """
             You are a property-location analyst. Summarize the given area parameters \
             into ONE short natural paragraph (max 70 words) for home buyers. \
-            Plain prose only — no lists, no headings, no markdown. \
-            \(languageLine)
+            Plain prose only — no lists, no headings, no markdown. Write in English.
             """
         )
         var latest = ""
-        let stream = session.streamResponse(to: prompt)
-        for try await snapshot in stream {
+        for try await snapshot in session.streamResponse(to: promptText(intel: intel)) {
             latest = snapshot.content
             onPartial(latest)
         }
         return latest
     }
 
-    // 🌟 Menghapus parameter placeName dan subtitle agar tidak memicu error bahasa
     private static func promptText(intel: PlaceIntel) -> String {
-        let popText = intel.population != nil ? "\(intel.population!) people" : "Unknown"
-        let crimeText = intel.crimeTotal != nil ? "\(intel.crimeTotal!) criminal cases reported" : "Unknown"
-        let wifiText = (intel.wifiDownload != nil) ? "\(intel.wifiDownload!) Mbps DL" : "Unknown"
-        let cellText = (intel.mobileDownload != nil) ? "\(intel.mobileDownload!) Mbps DL" : "Unknown"
-            
+        let popText   = intel.population    != nil ? "\(intel.population!) people" : "Unknown"
+        let crimeText = intel.crimeTotal    != nil ? "\(intel.crimeTotal!) criminal cases reported" : "Unknown"
+        let wifiText  = intel.wifiDownload  != nil ? "\(intel.wifiDownload!) Mbps DL" : "Unknown"
+        let cellText  = intel.mobileDownload != nil ? "\(intel.mobileDownload!) Mbps DL" : "Unknown"
+
         return """
         Area: a residential area in Indonesia (refer to it as "this area")
         Temperature: \(intel.temperatureLevel)

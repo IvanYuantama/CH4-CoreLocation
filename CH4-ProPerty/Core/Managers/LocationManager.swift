@@ -48,8 +48,10 @@ final class LocationManager: NSObject, ObservableObject {
             startTracking()
         }
     }
-
     private func startTracking() {
+        manager.requestTemporaryFullAccuracyAuthorization(
+            withPurposeKey: "PropertyAnalysis"
+        )
         manager.startUpdatingLocation()
         manager.startUpdatingHeading()
     }

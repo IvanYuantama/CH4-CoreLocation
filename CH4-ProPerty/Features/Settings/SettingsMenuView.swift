@@ -8,8 +8,10 @@
 import SwiftUI
 
 struct SettingsMenuView: View {
-        @EnvironmentObject private var vm: SettingsViewModel
-        @State private var activeSheet: SettingSheet?
+    @EnvironmentObject private var vm: SettingsViewModel
+    @State private var activeSheet: SettingSheet?
+
+    private var lang: String { vm.selectedLanguage }
 
     enum SettingSheet: Identifiable {
         case language, mode, data
@@ -23,16 +25,21 @@ struct SettingsMenuView: View {
             }
             .frame(width: 30)
             .contentShape(Rectangle())
+            .accessibilityLabel(L.t(.menuLanguage, lang))
+
             Button { activeSheet = .mode } label: {
                 Image(systemName: "circle.righthalf.filled")
             }
             .frame(width: 30)
             .contentShape(Rectangle())
+            .accessibilityLabel(L.t(.menuMode, lang))
+
             Button { activeSheet = .data } label: {
                 Image(systemName: "bubble.left.and.bubble.right")
             }
             .frame(width: 30)
             .contentShape(Rectangle())
+            .accessibilityLabel(L.t(.menuData, lang))
         }
         .font(.system(size: 20))
         .foregroundColor(Color(.textPrimary))
@@ -44,12 +51,9 @@ struct SettingsMenuView: View {
         .sheet(item: $activeSheet) { sheet in
             Group {
                 switch sheet {
-                case .language:
-                    LanguagePreferenceView(vm: vm)
-                case .mode:
-                    AppModeView(vm: vm)
-                case .data:
-                    DataPreferenceView(vm: vm)
+                case .language: LanguagePreferenceView(vm: vm)
+                case .mode:     AppModeView(vm: vm)
+                case .data:     DataPreferenceView(vm: vm)
                 }
             }
             .presentationDetents([.medium])
@@ -60,6 +64,5 @@ struct SettingsMenuView: View {
 }
 
 #Preview("Settings Menu") {
-    SettingsMenuView()
-        .environmentObject(SettingsViewModel())
+    SettingsMenuView().environmentObject(SettingsViewModel())
 }
