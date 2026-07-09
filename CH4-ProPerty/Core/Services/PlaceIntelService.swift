@@ -8,6 +8,26 @@
 import Foundation
 
 enum PlaceIntelService {
+    
+    /// Relevansi/tier jalan — dipakai sebagai pemecah seri saat frekuensi sama.
+    private static let roadRank: [String: Int] = [
+        "Arterial": 5, "Collector": 4, "Local": 3, "Other": 2, "Footpath": 1
+    ]
+
+    /// Pilih SATU tipe jalan paling sering muncul.
+    /// Seri jumlah → menangkan tier tertinggi (Arterial > … > Footpath). Deterministik.
+    private static func dominantRoad(from labels: [String]) -> String? {
+        guard !labels.isEmpty else { return nil }
+        var counts: [String: Int] = [:]
+        for l in labels { counts[l, default: 0] += 1 }
+        return counts.max { a, b in
+            if a.value != b.value { return a.value < b.value }          // 1) frekuensi terbanyak
+            let ra = roadRank[a.key] ?? 0, rb = roadRank[b.key] ?? 0
+            if ra != rb { return ra < rb }                              // 2) tier paling relevan
+            return a.key > b.key                                        // 3) alfabet (stabil)
+        }?.key
+    }
+    
     static func fetchIntel(lat: Double, lng: Double) async throws -> PlaceIntel {
         let urlString = "https://api.ryansafa.cloud/api/analyze?lat=\(lat)&lng=\(lng)"
         guard let url = URL(string: urlString) else { throw URLError(.badURL) }
@@ -22,7 +42,7 @@ enum PlaceIntelService {
         
         var intel = PlaceIntel()
         var facilitiesCount = 0
-        var roadTypes: Set<String> = [] // Menggunakan Set untuk mencegah duplikasi nama jalan
+        var roadLabels: [String] = [] // Menggunakan Set untuk mencegah duplikasi nama jalan
         
         for item in dataArray {
             let layer = item["layer"] as? String ?? ""
@@ -56,10 +76,10 @@ enum PlaceIntelService {
                 else if let fam = attributes["jumlah_kk"] as? Int { intel.families = fam }
                 
             case "roads_buffer":
-                // Mengambil jalan yang posisinya paling dekat dengan pin (distance 0)
+                // Mengambil jalan yang posisinya paling dekat dengan pin (distance)
                 if distance == 0 {
                     let roadName = label.replacingOccurrences(of: " Road", with: "")
-                    roadTypes.insert(roadName)
+                    if !roadName.isEmpty {roadLabels.append(roadName)}
                 }
                 
             case "public_facilities":
@@ -95,8 +115,8 @@ enum PlaceIntelService {
         }
         
         // Gabungkan jalan jika ada tumpang tindih (contoh: "Collector, Local")
-        if !roadTypes.isEmpty {
-            intel.roadAccess = Array(roadTypes).joined(separator: ", ")
+        if let dominant = Self.dominantRoad(from: roadLabels){
+            intel.roadAccess = dominant
         }
         
         intel.facilityCount = facilitiesCount

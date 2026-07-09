@@ -172,9 +172,9 @@ enum L {
         "collector": ["id": "Kolektor"],
         "arterial":  ["id": "Arteri"],
         "local":     ["id": "Lokal"],
-        "highway":   ["id": "Jalan Raya"],
+        "highway":   ["id": "Jl Raya"],
         "other":    ["id": "Lainnya"],
-        "footoath":  ["id": "Trotoar"],
+        "footpath":  ["id": "Jl Setapak"],
 
         "highland": ["id": "D. Tinggi"],
         "lowland":  ["id": "D. Rendah"],
