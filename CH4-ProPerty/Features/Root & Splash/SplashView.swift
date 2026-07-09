@@ -8,27 +8,24 @@
 import SwiftUI
 
 struct SplashView: View {
+    @AppStorage("appLanguage") private var lang: String = "en"
+
     var body: some View {
         VStack(spacing: 26) {
-            // Kita hapus Spacer() di atas agar konten tidak terdorong ke bawah
-            
-            Image("app-logo") // Pastikan nama aset di Assets.xcassets benar
+            Image("app-logo")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 200, height: 200)
-            
-            Text("Consider your property like a professional")
+
+            Text(L.t(.splashTagline, lang))
                 .font(.footnote)
                 .foregroundStyle(Color(.textSecondary))
-            
-            // Kita hapus juga Spacer() di bawah
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity) // Memaksa VStack mengisi seluruh layar
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.background))
         .ignoresSafeArea()
     }
 }
-
 #Preview {
     SplashView()
 }

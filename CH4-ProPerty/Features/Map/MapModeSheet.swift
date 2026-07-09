@@ -10,88 +10,59 @@ import SwiftUI
 struct MapModeSheet: View {
     @Binding var mapMode: MainMapViewModel.MapMode
     @Environment(\.dismiss) private var dismiss
+    @AppStorage("appLanguage") private var lang: String = "en"
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            // MARK: - Header
             HStack {
-                Text("Map Mode")
+                Text(L.t(.mapMode, lang))
                     .font(Theme.Typography.title)
                     .foregroundColor(Color(.textPrimary))
                 Spacer()
-                Image(systemName: "map")
-                    .font(.title2)
-                    .foregroundColor(Color(.textPrimary))
+                Image(systemName: "map").font(.title2).foregroundColor(Color(.textPrimary))
             }
             .padding(.top, 24)
             .padding(.horizontal, 24)
 
-            // MARK: - Tiles
-            HStack(spacing: 16) {
-                modeTile(
-                    title: "Explore",
-                    imageName: "explore",
-                    isSelected: mapMode == .explore
-                ) {
+            HStack(spacing: 20) {
+                modeTile(title: L.t(.explore, lang), imageName: "explore", isSelected: mapMode == .explore) {
                     mapMode = .explore
-                    dismiss()
                 }
-
-                modeTile(
-                    title: "Satellite",
-                    imageName: "satellite",
-                    isSelected: mapMode == .satellite
-                ) {
+                modeTile(title: L.t(.satellite, lang), imageName: "satellite", isSelected: mapMode == .satellite) {
                     mapMode = .satellite
-                    dismiss()
                 }
             }
             .padding(.horizontal, 24)
 
             Spacer()
         }
-        .background(Theme.background.ignoresSafeArea())
+        .background(Color(.background).ignoresSafeArea())
     }
 
-    private func modeTile(
-        title: String,
-        imageName: String,
-        isSelected: Bool,
-        action: @escaping () -> Void
-    ) -> some View {
+    private func modeTile(title: String, imageName: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            VStack(spacing: 10) {
-                Image(imageName)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 120)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
+            VStack(spacing: 8) {
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color(UIColor.secondarySystemBackground))
+                    .frame(height: 90)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(
-                                isSelected ? Theme.primary : Color.clear,
-                                lineWidth: 3
-                            )
+                        // Gunakan gambar kustom dari Assets
+                        Image(imageName)
+                            .resizable()
                     )
-
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(Color(.brand), lineWidth: isSelected ? 3 : 0)
+                    )
                 Text(title)
-                    .font(Theme.Typography.section)
-                    .foregroundColor(Theme.textPrimary)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(Color(.textPrimary))
             }
         }
         .buttonStyle(.plain)
-        .frame(maxWidth: .infinity)
     }
 }
 
 #Preview {
-    Color.gray.opacity(0.3)
-        .ignoresSafeArea()
-        .sheet(isPresented: .constant(true)) {
-            MapModeSheet(mapMode: .constant(.explore))
-                .presentationDetents([.height(260)])
-                .presentationCornerRadius(30)
-                .presentationDragIndicator(.visible)
-        }
+    MapModeSheet(mapMode: .constant(.explore))
 }

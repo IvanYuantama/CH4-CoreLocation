@@ -9,12 +9,13 @@ import SwiftUI
 
 struct DataPreferenceView: View {
     @ObservedObject var vm: SettingsViewModel
-    
+    private var lang: String { vm.selectedLanguage }
+
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    Text("Data Preferences")
+                    Text(L.t(.dataPreferences, lang))
                         .font(Theme.Typography.heading)
                         .foregroundColor(Color(.textPrimary))
                     Spacer()
@@ -25,47 +26,41 @@ struct DataPreferenceView: View {
                 .padding(.top, 24)
                 .padding(.horizontal, 24)
                 .padding(.bottom, 20)
-                
+
                 Group {
-                    PreferenceRadioRow(title: "Temperature", subtitle: "Display the average temperature", isSelected: vm.showTemperature) { vm.showTemperature.toggle() }
-                    
-                    Divider().padding(.leading, 24)
-                    PreferenceRadioRow(title: "Flood Risk", subtitle: "Display the risk of flooding", isSelected: vm.showFloodRisk) { vm.showFloodRisk.toggle() }
-                    
-                    Divider().padding(.leading, 24)
-                    PreferenceRadioRow(title: "Air Quality", subtitle: "Display the air quality level", isSelected: vm.showAirQuality) { vm.showAirQuality.toggle() }
-                    
-                    Divider().padding(.leading, 24)
-                    PreferenceRadioRow(title: "Green Spaces", subtitle: "Display green space availability", isSelected: vm.showGreenSpaces) { vm.showGreenSpaces.toggle() }
-                    
-                    Divider().padding(.leading, 24)
-                    PreferenceRadioRow(title: "Road Access", subtitle: "Display primary road access type", isSelected: vm.showRoadAccess) { vm.showRoadAccess.toggle() }
-                    
-                    Divider().padding(.leading, 24)
-                    PreferenceRadioRow(title: "Public Facilities", subtitle: "Display nearby public facilities", isSelected: vm.showPublicFacilities) { vm.showPublicFacilities.toggle() }
-                    
-                    Divider().padding(.leading, 24)
-                    PreferenceRadioRow(title: "Population", subtitle: "Display area population count", isSelected: vm.showPopulation) { vm.showPopulation.toggle() }
-                    
-                    Divider().padding(.leading, 24)
-                    PreferenceRadioRow(title: "Families", subtitle: "Display total families in the area", isSelected: vm.showFamilies) { vm.showFamilies.toggle() }
-                    
-                    Divider().padding(.leading, 24)
-                    PreferenceRadioRow(title: "Elevation", subtitle: "Display geography elevation level", isSelected: vm.showElevation) { vm.showElevation.toggle() }
-                    
-                    // 🌟 BARU: Toggle untuk Crime
-                    Divider().padding(.leading, 24)
-                    PreferenceRadioRow(title: "Crime Data", subtitle: "Display reported criminal cases", isSelected: vm.showCrimeData) { vm.showCrimeData.toggle() }
-                    
-                    // 🌟 BARU: Toggle untuk Network
-                    Divider().padding(.leading, 24)
-                    PreferenceRadioRow(title: "Network Connectivity", subtitle: "Display WiFi and Cellular speeds", isSelected: vm.showNetworkData) { vm.showNetworkData.toggle() }
+                    row(.temperature, .temperatureSub, vm.showTemperature) { vm.showTemperature.toggle() }
+                    divider
+                    row(.floodRisk, .floodRiskSub, vm.showFloodRisk) { vm.showFloodRisk.toggle() }
+                    divider
+                    row(.airQuality, .airQualitySub, vm.showAirQuality) { vm.showAirQuality.toggle() }
+                    divider
+                    row(.greenSpaces, .greenSpacesSub, vm.showGreenSpaces) { vm.showGreenSpaces.toggle() }
+                    divider
+                    row(.roadAccess, .roadAccessSub, vm.showRoadAccess) { vm.showRoadAccess.toggle() }
+                    divider
+                    row(.publicFacilities, .publicFacilitiesSub, vm.showPublicFacilities) { vm.showPublicFacilities.toggle() }
+                    divider
+                    row(.population, .populationSub, vm.showPopulation) { vm.showPopulation.toggle() }
+                    divider
+                    row(.families, .familiesSub, vm.showFamilies) { vm.showFamilies.toggle() }
+                    divider
+                    row(.elevation, .elevationSub, vm.showElevation) { vm.showElevation.toggle() }
+                    divider
+                    row(.crimeData, .crimeDataSub, vm.showCrimeData) { vm.showCrimeData.toggle() }
+                    divider
+                    row(.networkConnectivity, .networkConnectivitySub, vm.showNetworkData) { vm.showNetworkData.toggle() }
                 }
-                
+
                 Spacer(minLength: 40)
             }
         }
         .background(Color(.background).ignoresSafeArea())
+    }
+
+    private var divider: some View { Divider().padding(.leading, 24) }
+
+    private func row(_ title: LocKey, _ sub: LocKey, _ isOn: Bool, _ action: @escaping () -> Void) -> some View {
+        PreferenceRadioRow(title: L.t(title, lang), subtitle: L.t(sub, lang), isSelected: isOn, action: action)
     }
 }
 

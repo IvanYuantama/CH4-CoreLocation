@@ -12,6 +12,8 @@ import Combine
 class SettingsViewModel: ObservableObject {
     @AppStorage("appLanguage") var selectedLanguage: String = "en"
     @AppStorage("appColorScheme") var appColorScheme: String = "system"
+    @Published var directIndonesianFailed: Bool = false
+
     
     @AppStorage("showTemperature") var showTemperature: Bool = true
     @AppStorage("showFloodRisk") var showFloodRisk: Bool = true

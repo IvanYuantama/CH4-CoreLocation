@@ -38,24 +38,20 @@ struct MainMapView: View {
         MapReader { proxy in
             ZStack(alignment: .top) {
                 // MARK: - Map Layer
-                Map(position: $vm.camera, scope: mapScope) {
+                Map(position: $vm.camera, scope: mapScope) {  // ← scope tetap di sini
                     UserAnnotation()
                     if let pinned = vm.pinned {
                         Marker(pinned.name, coordinate: pinned.coordinate)
                             .tint(Color(red: 0.89, green: 0.22, blue: 0.21))
                     }
                 }
+                .mapScope(mapScope)  // ← PINDAH ke sini, langsung di Map
                 .mapStyle(vm.mapStyle)
                 .mapControls {
-                    // WAJIB di dalam .mapControls{} supaya .automatic benar-benar berfungsi —
-                    // sebagai view berdiri sendiri di luar sini (walau scope sama), auto-show
-                    // dan tap-to-reset-nya tidak reliable (terbukti dari testing Experiment project).
-                    // Konsekuensi: posisi jadi ditentukan sistem, bukan custom di anchorStack lagi.
                     MapCompass(scope: mapScope)
                         .mapControlVisibility(.automatic)
                     MapPitchToggle(scope: mapScope)
                         .mapControlVisibility(.automatic)
-                    // Disembunyikan — kita pakai anchor button custom sendiri, bukan native ini.
                     MapScaleView(scope: mapScope)
                         .mapControlVisibility(.hidden)
                     MapUserLocationButton(scope: mapScope)
@@ -84,16 +80,14 @@ struct MainMapView: View {
                     vm.updateHeadingIfLocked(newHeading)
                 }
                 .onAppear {
-                    // Minta izin & mulai tracking lokasi+heading sedini mungkin, supaya
-                    // saat user tap anchor pertama kali, `lastLocation`/`heading` sudah
-                    // (atau segera) tersedia — bukan menunggu tap pertama yang jadi "kebuang".
                     location.requestLocation()
                 }
+                .ignoresSafeArea()  // ← tambah ini agar Map full screen
 
                 // MARK: - Blur Header Overlay
                 Rectangle()
                     .fill(.ultraThinMaterial)
-                    .opacity(0.8) // Ketebalan blur yang sudah disesuaikan
+                    .opacity(0.8)
                     .frame(height: 140)
                     .mask(
                         LinearGradient(
@@ -107,18 +101,14 @@ struct MainMapView: View {
 
                 // MARK: - Top Bar (Logo & Settings)
                 ZStack(alignment: .top) {
-                    // Logo Asset (Tengah)
                     Image("app-name")
                         .resizable()
                         .scaledToFit()
                         .frame(height: 26)
                         .padding(.top, 10)
 
-                    // Tombol Settings (Kanan)
                     HStack {
                         Spacer()
-
-                        // MARK: - Sleek Vertical Dropdown Settings
                         VStack(spacing: 0) {
                             Button {
                                 withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
@@ -128,7 +118,7 @@ struct MainMapView: View {
                                 Image(systemName: showSettings ? "xmark" : "line.3.horizontal")
                                     .font(.system(size: 18, weight: .medium))
                                     .foregroundColor(Color(.textPrimary))
-                                    .frame(width: 45, height: 45) // Ukuran tombol utama
+                                    .frame(width: 45, height: 45)
                                     .contentTransition(.symbolEffect(.replace))
                             }
 
@@ -151,6 +141,7 @@ struct MainMapView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
             }
+            // ← HAPUS .mapScope(mapScope) dari sini
             .safeAreaInset(edge: .bottom) {
                 bottomFloatingBar
             }
@@ -166,7 +157,6 @@ struct MainMapView: View {
                 .presentationDragIndicator(.visible)
             }
             .sheet(isPresented: $vm.showSearch) {
-                // MARK: Pembaruan SearchSheet tanpa parameter bookmarks
                 SearchSheet(
                     center: vm.mapCenter,
                     onSelect: vm.selectPlace
@@ -182,16 +172,31 @@ struct MainMapView: View {
                     .presentationCornerRadius(Theme.sheetRadius)
             }
         }
-        .mapScope(mapScope)
         .environmentObject(settings)
     }
+    
 
     // MARK: - Bottom Floating Bar
     private var bottomFloatingBar: some View {
         HStack(alignment: .bottom, spacing: 12) {
             mapModeButton
             searchBar
-            anchorButton
+            
+            // Anchor button + native controls di atasnya
+            VStack(spacing: 8) {
+                // Native Compass + PitchToggle — muncul otomatis saat dibutuhkan
+                VStack(spacing: 0) {
+                    MapCompass(scope: mapScope)
+                        .mapControlVisibility(.automatic)
+                    MapPitchToggle(scope: mapScope)
+                        .mapControlVisibility(.automatic)
+                }
+                .background(Color(UIColor.systemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
+                
+                anchorButton
+            }
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 16)
@@ -219,7 +224,7 @@ struct MainMapView: View {
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass").foregroundColor(Color(.textSecondary))
-                Text("Search a location").foregroundColor(Color(.textSecondary))
+                Text(L.t(.searchLocation, settings.selectedLanguage)).foregroundColor(Color(.textSecondary))
                     .font(Theme.Typography.section)
                 Spacer()
                 Image(systemName: "mic.fill").foregroundColor(Color(.textSecondary))
@@ -232,6 +237,8 @@ struct MainMapView: View {
         }
         .buttonStyle(.plain)
     }
+    
+    
 
     private var anchorButton: some View {
         Button {

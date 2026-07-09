@@ -9,45 +9,44 @@ import SwiftUI
 
 struct LanguagePreferenceView: View {
     @ObservedObject var vm: SettingsViewModel
-    @Environment(\.dismiss) private var dismiss
+
+    private var lang: String { vm.selectedLanguage }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            // Header
             HStack {
-                Text("Language Preference")
+                Text(L.t(.languagePreference, lang))
                     .font(Theme.Typography.heading)
                     .foregroundColor(Color(.textPrimary))
                 Spacer()
-                Image(systemName: "translate")
-                    .font(.title2)
+                Image(systemName: "translate").font(.title2)
             }
             .padding(.top, 24)
             .padding(.horizontal, 24)
-            
-            // Opsi Indonesia
+
             PreferenceRadioRow(
                 title: "Indonesia",
                 subtitle: "Bahasa Indonesia",
                 isSelected: vm.selectedLanguage == "id"
-            ) {
-                vm.selectedLanguage = "id"
-            }
-            
+            ) { selectLanguage("id") }
+
             Divider().padding(.leading, 24)
-            
-            // Opsi English
+
             PreferenceRadioRow(
                 title: "English",
                 subtitle: "United States",
                 isSelected: vm.selectedLanguage == "en"
-            ) {
-                vm.selectedLanguage = "en"
-            }
-            
+            ) { selectLanguage("en") }
+
             Spacer()
         }
         .background(Color(.background).ignoresSafeArea())
+    }
+
+    private func selectLanguage(_ code: String) {
+        vm.selectedLanguage = code
+        // Beri kesempatan model on-device mencoba lagi generate Bahasa Indonesia native.
+        vm.directIndonesianFailed = false
     }
 }
 
@@ -57,7 +56,7 @@ struct PreferenceRadioRow: View {
     let subtitle: String
     let isSelected: Bool
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             HStack {
@@ -70,16 +69,12 @@ struct PreferenceRadioRow: View {
                         .foregroundColor(Color(.textSecondary))
                 }
                 Spacer()
-                
-                // Indikator Radio Button kustom
                 ZStack {
                     Circle()
                         .stroke(isSelected ? Color(.brand) : Color.gray.opacity(0.5), lineWidth: 2)
                         .frame(width: 20, height: 20)
                     if isSelected {
-                        Circle()
-                            .fill(Color(.brand))
-                            .frame(width: 12, height: 12)
+                        Circle().fill(Color(.brand)).frame(width: 12, height: 12)
                     }
                 }
             }
