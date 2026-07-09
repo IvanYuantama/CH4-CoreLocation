@@ -27,6 +27,8 @@ import Combine
 
 @MainActor
 class MainMapViewModel: ObservableObject {
+    // MainMapViewModel
+    @Published var searchDetent: PresentationDetent = .height(64)
     static let bali = CLLocationCoordinate2D(latitude: -8.65, longitude: 115.16)
 
     enum AnchorState {

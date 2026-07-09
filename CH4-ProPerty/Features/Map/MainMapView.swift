@@ -9,8 +9,14 @@
 //    toggle `useHybrid`), ikonnya ikut berubah (map.fill <-> globe.americas.fill).
 //  - Tombol kanan (anchor) sekarang manggil `vm.handleAnchorTap(...)`, ikon & warnanya
 //    berubah sesuai `vm.anchorState` (Free/Center/Heading-Lock).
-//  - `bottomFloatingBar` dibungkus jadi VStack di atas tombol anchor, buat nampung
-//    Compass (saat Heading-Lock) & tombol 2D/3D (saat Satellite) yang nempel di atasnya.
+//  - `bottomFloatingBar` LAMA (HStack: mapMode + searchBar + anchor) DIHAPUS.
+//    Sekarang search bar bukan tombol pemicu sheet lagi, tapi jadi bagian docked
+//    dari `SearchSheet` itu sendiri (persis Apple Maps) — sheet-nya SELALU present
+//    dengan detent kecil (`.height(collapsedSearchHeight)`) sebagai collapsed state,
+//    dan naik ke `.medium`/`.large` saat di-tap/drag/focus.
+//  - `mapModeButton` & `anchorButton` sekarang jadi floating overlay terpisah
+//    (trailing-bottom), mengambang DI ATAS collapsed sheet, karena mereka bukan
+//    bagian dari search UI.
 //  - `.onChange(of: location.lastLocation?.latitude)` sekarang manggil `vm.followLocation`
 //    (di-gate anchorState), bukan `zoomToUserLocation` yang selalu maksa recenter.
 //  - Tambah `.onChange(of: location.heading)` buat forward heading (sudah di-throttle)
@@ -18,6 +24,19 @@
 //  - Tambah `MapModeSheet` sebagai overlay di root, dengan binding custom yang manggil
 //    `vm.selectMapMode(...)` (bukan assignment langsung) supaya efek samping (reset 3D,
 //    rebuild kamera) tetap jalan.
+//  - UPDATE: `SearchSheet` via `.sheet(isPresented:)` + `PresentationDetents` DIGANTI
+//    `FloatingSearchSheet` (FloatingBottomSheet.swift) sebagai overlay custom di dalam
+//    ZStack, biar dapet floating card look (bukan native sheet full-width nempel ke
+//    bawah layar). State collapsed/expanded sekarang dipegang `searchSheetState`
+//    (`FloatingSheetState`) di view ini, ganti peran `vm.searchDetent` (PresentationDetent)
+//    yang sebelumnya jadi single source of truth punya native sheet.
+//
+//  NOTE UNTUK VIEWMODEL (biar kompatibel dengan file ini):
+//  - `vm.showSearch: Bool` sudah TIDAK dipakai untuk present/dismiss sheet (sheet-nya
+//    sekarang permanent), tapi masih dipertahankan sebagai no-op/legacy jika ada
+//    pemanggil lain — boleh dihapus kalau memang sudah tidak direferensikan di tempat lain.
+//  - `vm.searchDetent` sudah TIDAK dipakai lagi di file ini (diganti `searchSheetState`
+//    lokal), boleh dihapus dari `MainMapViewModel` kalau tidak direferensikan di tempat lain.
 //
 
 import SwiftUI
@@ -31,8 +50,13 @@ struct MainMapView: View {
     @StateObject private var settings = SettingsViewModel()
 
     @State private var showSettings = false
+    @State private var anchorPressed = false
+    @State private var mapModePressed = false
     @State private var showMapModeSheet = false
     @Namespace private var mapScope
+
+    // State collapsed/expanded buat FloatingSearchSheet (ganti peran vm.searchDetent).
+    @State private var searchSheetState: FloatingSheetState = .collapsed
 
     var body: some View {
         MapReader { proxy in
@@ -68,6 +92,14 @@ struct MainMapView: View {
                     if showSettings {
                         withAnimation(.easeOut(duration: 0.2)) {
                             showSettings = false
+                        }
+                        return
+                    }
+                    // Tap di map saat search sheet lagi expanded → collapse dulu,
+                    // biar behavior-nya sama kayak Apple Maps (tap map = dismiss keyboard/list).
+                    if searchSheetState != .collapsed {
+                        withAnimation(.snappy) {
+                            searchSheetState = .collapsed
                         }
                         return
                     }
@@ -150,29 +182,33 @@ struct MainMapView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
-            }
-            .safeAreaInset(edge: .bottom) {
-                bottomFloatingBar
-            }
-            .sheet(isPresented: $showMapModeSheet) {
-                MapModeSheet(
-                    mapMode: Binding(
-                        get: { vm.mapMode },
-                        set: { vm.selectMapMode($0) }
+
+                // MARK: - Floating Buttons (Map Mode & Anchor)
+                // Mengambang di atas collapsed search sheet, bukan lagi bagian dari
+                // bottomFloatingBar lama yang sejajar horizontal sama search bar.
+                ZStack(alignment: .bottom) {
+
+                    FloatingSearchSheet(
+                        center: vm.mapCenter,
+                        state: $searchSheetState,
+                        onSelect: vm.selectPlace
                     )
-                )
-                .presentationDetents([.height(260)])
-                .presentationCornerRadius(Theme.sheetRadius)
-                .presentationDragIndicator(.visible)
-            }
-            .sheet(isPresented: $vm.showSearch) {
-                // MARK: Pembaruan SearchSheet tanpa parameter bookmarks
-                SearchSheet(
-                    center: vm.mapCenter,
-                    onSelect: vm.selectPlace
-                )
-                .presentationDetents([.medium, .large])
-                .presentationCornerRadius(Theme.sheetRadius)
+
+                    if searchSheetState == .collapsed {
+                        HStack {
+
+                            MapModeButtonView(vm: vm)
+
+                            Spacer()
+
+                            anchorButton
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 10)
+                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    }
+                }
+                .animation(.snappy, value: searchSheetState)
             }
             .sheet(item: $vm.detail) { place in
                 PlaceDetailView(place: place)
@@ -186,22 +222,23 @@ struct MainMapView: View {
         .environmentObject(settings)
     }
 
-    // MARK: - Bottom Floating Bar
-    private var bottomFloatingBar: some View {
-        HStack(alignment: .bottom, spacing: 12) {
-            mapModeButton
-            searchBar
-            anchorButton
-        }
-        .padding(.horizontal, 16)
-        .padding(.bottom, 16)
-    }
-
+    // MARK: - Bottom Map Mode
     private var mapModeButton: some View {
         Button {
+
+            withAnimation(.bouncy(duration: 0.1)){
+                mapModePressed.toggle()
+            }
             withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
                 showMapModeSheet = true
             }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation(.bouncy(duration: 0.5)) {
+                    mapModePressed = false
+                }
+            }
+
         } label: {
             Image(systemName: vm.mapMode == .satellite ? "globe.americas.fill" : "map.fill")
                 .font(.system(size: 20))
@@ -210,34 +247,32 @@ struct MainMapView: View {
                 .background(Color(UIColor.systemBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
-        }
-    }
-
-    private var searchBar: some View {
-        Button {
-            vm.showSearch = true
-        } label: {
-            HStack(spacing: 10) {
-                Image(systemName: "magnifyingglass").foregroundColor(Color(.textSecondary))
-                Text("Search a location").foregroundColor(Color(.textSecondary))
-                    .font(Theme.Typography.section)
-                Spacer()
-                Image(systemName: "mic.fill").foregroundColor(Color(.textSecondary))
-            }
-            .padding(.horizontal, 16)
-            .frame(height: 50)
-            .background(Color(UIColor.systemBackground))
-            .clipShape(Capsule())
-            .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
+                .scaleEffect(mapModePressed ? 1.2 : 1.0)
         }
         .buttonStyle(.plain)
+
     }
 
+    // MARK: - Anchor Button
     private var anchorButton: some View {
         Button {
-            vm.handleAnchorTap(currentLocation: location.lastLocation, currentHeading: location.heading)
+            withAnimation(.bouncy(duration: 0.18)) {
+                anchorPressed = true
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation(.bouncy(duration: 0.5)) {
+                    anchorPressed = false
+                }
+            }
+
+            vm.handleAnchorTap(
+                currentLocation: location.lastLocation,
+                currentHeading: location.heading
+            )
+
             if location.lastLocation == nil {
-                location.requestLocation() // trigger permission/fetch pertama kalau belum ada fix
+                location.requestLocation()
             }
         } label: {
             Image(systemName: anchorIconName)
@@ -247,7 +282,10 @@ struct MainMapView: View {
                 .background(Color(UIColor.systemBackground))
                 .clipShape(Circle())
                 .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
+                .scaleEffect(anchorPressed ? 1.2 : 1.0)
         }
+        .buttonStyle(.plain)
+        .offset(y: -1)
     }
 
     private var anchorIconName: String {

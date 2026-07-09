@@ -8,85 +8,95 @@
 import SwiftUI
 import MapKit
 
+// CLLocationCoordinate2D belum conform Equatable secara default -- wajib ada ini
+// supaya `.onChange(of: center)` di bawah bisa compile.
+extension CLLocationCoordinate2D: @retroactive Equatable {
+    public static func == (lhs: CLLocationCoordinate2D, rhs: CLLocationCoordinate2D) -> Bool {
+        lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude
+    }
+}
+
 struct SearchSheet: View {
     let center: CLLocationCoordinate2D
+    @Binding var detent: PresentationDetent
     let onSelect: (PlaceResult) -> Void
-    
+
     @StateObject private var vm = SearchViewModel()
     @FocusState private var isFieldFocused: Bool
-    
+
     var body: some View {
-        VStack(spacing: 0) {
-            
-            // MARK: - Search Bar Custom
-            HStack(spacing: 10) {
-                Image(systemName: "magnifyingglass").foregroundColor(Color(.textSecondary))
-                
-                TextField("Search a location", text: $vm.query)
-                    .focused($isFieldFocused)
-                    .font(.body)
-                    .textCase(nil)
-                    .textInputAutocapitalization(.never) // Mengikuti status asli tombol caps lock keyboard user
-                    .disableAutocorrection(true)
-                    .submitLabel(.search)
-                
-                if vm.isLoading {
-                    ProgressView().controlSize(.small)
-                } else {
-                    Image(systemName: "mic.fill").foregroundColor(Color(.textSecondary))
+        List {
+            if vm.query.isEmpty {
+                ForEach(vm.savedPlaces) { place in
+                    SearchResultRow(place: place, isBookmarked: true,
+                                     onBookmark: { vm.toggleBookmark(for: place) },
+                                     onTap: { selectAndCollapse(place) })
+                        .listRowSeparator(.hidden)
+                }
+            } else {
+                ForEach(vm.results) { place in
+                    SearchResultRow(place: place, isBookmarked: vm.isBookmarked(place),
+                                     onBookmark: { vm.toggleBookmark(for: place) },
+                                     onTap: { selectAndCollapse(place) })
+                        .listRowSeparator(.hidden)
                 }
             }
-            .padding(.horizontal, 16)
-            .frame(height: 50)
-            .background(Color(UIColor.systemBackground))
-            .clipShape(Capsule())
-            .shadow(color: .black.opacity(0.05), radius: 3, y: 1)
-            .padding(.horizontal, 20)
-            .padding(.top, 16)
-            .padding(.bottom, 10)
-
-            if let errorMessage = vm.errorMessage {
-                Text(errorMessage)
-                    .font(Theme.Typography.subtitle)
-                    .foregroundColor(.red)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 8)
-            }
-
-            // MARK: - List Tampilan Lokasi (Clean Style)
-            List {
-                if vm.query.isEmpty {
-                    // Menampilkan daftar bookmark secara bersih jika kolom pencarian kosong
-                    ForEach(vm.savedPlaces) { place in
-                        SearchResultRow(
-                            place: place,
-                            isBookmarked: true,
-                            onBookmark: { vm.toggleBookmark(for: place) },
-                            onTap: { onSelect(place) }
-                        )
-                        .listRowSeparator(.hidden)
-                    }
-                } else {
-                    // Menampilkan hasil pencarian fuzzy sedunia yang diurutkan kombinasi relevansi & jarak
-                    ForEach(vm.results) { place in
-                        SearchResultRow(
-                            place: place,
-                            isBookmarked: vm.isBookmarked(place),
-                            onBookmark: { vm.toggleBookmark(for: place) },
-                            onTap: { onSelect(place) }
-                        )
-                        .listRowSeparator(.hidden)
-                    }
-                }
-            }
-            .listStyle(.plain)
         }
-        .padding(.top, 10)
+        .listStyle(.plain)
+        .safeAreaInset(edge: .top) {
+            searchField
+        }
         .background(Color(.cardBackground).ignoresSafeArea())
-        .onAppear {
-            isFieldFocused = true
-            vm.setCenter(center)
+        .onAppear { vm.setCenter(center) }
+        .onChange(of: center) { _, newCenter in
+            // Map di-geser -> update origin buat re-sort jarak/relevansi hasil pencarian.
+            vm.setCenter(newCenter)
         }
+        .onChange(of: isFieldFocused) { _, focused in
+            if focused {
+                withAnimation(.snappy) { detent = .large }
+            }
+        }
+        .onChange(of: detent) { _, newDetent in
+            // Kalau sheet di-collapse dari luar (mis. tap di map), pastikan keyboard
+            // ikut turun -- tanpa ini isFieldFocused nyangkut true & keyboard nongol
+            // padahal sheet-nya udah collapse.
+            if newDetent != .large && newDetent != .medium {
+                isFieldFocused = false
+            }
+        }
+    }
+
+    private func selectAndCollapse(_ place: PlaceResult) {
+        isFieldFocused = false
+        withAnimation(.snappy) {
+            detent = .height(64)
+        }
+        onSelect(place)
+    }
+
+    private var searchField: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass").foregroundColor(Color(.textSecondary))
+            TextField("Search a location", text: $vm.query)
+                .focused($isFieldFocused)
+                .textInputAutocapitalization(.never)
+                .disableAutocorrection(true)
+                .submitLabel(.search)
+            if vm.isLoading {
+                ProgressView().controlSize(.small)
+            } else {
+                Image(systemName: "mic.fill").foregroundColor(Color(.textSecondary))
+            }
+            
+        }
+        .frame(height: 50)
+        .background(Color(UIColor.systemBackground))
+        .clipShape(Capsule())
+        .padding(.horizontal, 20)
+        .padding(.vertical, 10)
+        .background(Color(.cardBackground))
+        .offset(y:5)
     }
 }
 
@@ -101,7 +111,7 @@ struct SearchResultRow: View {
         HStack(alignment: .top, spacing: 16) {
             VStack(spacing: 0) {
                 CustomPinMarker()
-                
+
                 if let distance = place.distanceLabel {
                     Text(distance)
                         .font(.system(size: 10, weight: .medium))
@@ -118,7 +128,7 @@ struct SearchResultRow: View {
                     .font(Theme.Typography.section)
                     .foregroundColor(Color(.textPrimary))
                     .lineLimit(1)
-                
+
                 Text(place.subtitle)
                     .font(Theme.Typography.subtitle)
                     .foregroundColor(Color(.textSecondary))
@@ -126,9 +136,9 @@ struct SearchResultRow: View {
                     .truncationMode(.tail)
             }
             .padding(.top, 2)
-            
+
             Spacer()
-            
+
             // MARK: Komponen Kanan: Tombol Simpan/Bookmark
             Button(action: onBookmark) {
                 Image(systemName: isBookmarked ? "bookmark.fill" : "bookmark")
@@ -150,4 +160,59 @@ struct SearchResultRow: View {
         )
     }
 }
+
+// MARK: - Previews
+
+#Preview("Search Sheet - Collapsed (Docked)") {
+    SearchSheetDockedPreview(detent: .height(64))
+}
+
+#Preview("Search Sheet - Expanded (Docked)") {
+    SearchSheetDockedPreview(detent: .large)
+}
+
+/// Wrapper preview yang bener-bener nge-present `SearchSheet` lewat `.sheet`,
+/// bukan manggil langsung sebagai root view -- karena `.presentationDetents`
+/// cuma berlaku kalau content-nya beneran di-present sebagai sheet. Ada
+/// placeholder background "map" biar konteks docked-nya (nempel kecil di
+/// bawah layar, bukan ngambang full-screen) keliatan jelas di canvas preview.
+private struct SearchSheetDockedPreview: View {
+    @State private var detent: PresentationDetent
+    @State private var showSheet = true
+
+    init(detent: PresentationDetent) {
+        _detent = State(initialValue: detent)
+    }
+
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [Color(.systemGray5), Color(.systemGray3)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+
+            Text("MAP AREA (placeholder)")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .sheet(isPresented: $showSheet) {
+            SearchSheet(
+                center: CLLocationCoordinate2D(
+                    latitude: -6.2088,
+                    longitude: 106.8456
+                ),
+                detent: $detent
+            ) { place in
+                print("Selected:", place.name)
+            }
+            .presentationDetents([.height(64), .medium, .large], selection: $detent)
+            .presentationBackgroundInteraction(.enabled(upThrough: .height(64)))
+            .presentationDragIndicator(.hidden)
+            .interactiveDismissDisabled()
+        }
+    }
+}
+
 
