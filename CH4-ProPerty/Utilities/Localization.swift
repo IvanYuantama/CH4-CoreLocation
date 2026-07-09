@@ -120,7 +120,7 @@ enum L {
         .satellite:      ["en": "Satellite",         "id": "Satelit"],
 
         .splashTagline: ["en": "Consider your property like a professional",
-                         "id": "Pertimbangkan properti Anda selayaknya profesional"],
+                         "id": "Consider your property like a professional"],
 
         .openInMaps:      ["en": "Open in maps", "id": "Buka di peta"],
         .overview:        ["en": "Overview",     "id": "Ringkasan"],
@@ -156,6 +156,8 @@ enum L {
         "good":     ["id": "Baik"],
         "poor":     ["id": "Buruk"],
         "unhealthy":["id": "Tidak Sehat"],
+        "very hot": ["id": "Sangat Panas"],
+        "bad": ["id": "Buruk"],
 
         "cold": ["id": "Dingin"],
         "cool": ["id": "Sejuk"],
@@ -172,14 +174,14 @@ enum L {
         "local":     ["id": "Lokal"],
         "highway":   ["id": "Jalan Raya"],
 
-        "highland": ["id": "Dataran Tinggi"],
-        "lowland":  ["id": "Dataran Rendah"],
+        "highland": ["id": "D. Tinggi"],
+        "lowland":  ["id": "D. Rendah"],
         "hilly":    ["id": "Berbukit"],
 
         "school":      ["id": "Sekolah"],
         "hospital":    ["id": "Rumah Sakit"],
         "police":      ["id": "Polisi"],
-        "none nearby": ["id": "Tidak ada di sekitar"],
+        "none nearby": ["id": "Tidak ada"],
 
         "unknown": ["id": "Tidak Diketahui"],
     ]

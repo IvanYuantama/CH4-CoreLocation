@@ -25,13 +25,24 @@ struct SearchSheet: View {
     @FocusState private var isFieldFocused: Bool
 
     var body: some View {
-        List {
-            if vm.query.isEmpty {
-                ForEach(vm.savedPlaces) { place in
-                    SearchResultRow(place: place, isBookmarked: true,
-                                     onBookmark: { vm.toggleBookmark(for: place) },
-                                     onTap: { selectAndCollapse(place) })
-                        .listRowSeparator(.hidden)
+        VStack(spacing: 0) {
+            
+            // MARK: - Search Bar Custom
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass").foregroundColor(Color(.textSecondary))
+                
+                TextField(L.t(.searchLocation), text: $vm.query)
+                    .focused($isFieldFocused)
+                    .font(.body)
+                    .textCase(nil)
+                    .textInputAutocapitalization(.never) 
+                    .disableAutocorrection(true)
+                    .submitLabel(.search)
+                
+                if vm.isLoading {
+                    ProgressView().controlSize(.small)
+                } else {
+                    Image(systemName: "mic.fill").foregroundColor(Color(.textSecondary))
                 }
             } else {
                 ForEach(vm.results) { place in
