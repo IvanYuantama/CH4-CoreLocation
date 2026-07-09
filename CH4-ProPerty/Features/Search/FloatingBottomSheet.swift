@@ -52,6 +52,7 @@ struct FloatingBottomSheet<Content: View>: View {
             .animation(.snappy, value: state)
             .gesture(dragGesture)
         }
+        
     }
 
     private func sheetWidth(in geo: GeometryProxy) -> CGFloat {
@@ -64,20 +65,24 @@ struct FloatingBottomSheet<Content: View>: View {
     }
 
     private func sheetHeight(in geo: GeometryProxy) -> CGFloat {
+        let h = geo.size.height
+           print("height =", h)
+        
         switch state {
         case .collapsed:
             return 45
         case .expanded:
-            return geo.size.height * 1.5
+            return 778
+            
         }
     }
 
     private func bottomPadding(in geo: GeometryProxy) -> CGFloat {
         switch state {
         case .collapsed:
-            return 10
+            return 30
         case .expanded:
-            return -35
+            return -20
         }
     }
 
@@ -221,6 +226,7 @@ private struct Demo: View {
             ) { place in
                 print("Selected:", place.name)
             }
+            .offset(y: 35)
         }
     }
 }
