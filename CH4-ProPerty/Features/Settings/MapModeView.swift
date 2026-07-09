@@ -73,7 +73,7 @@ struct MapModeView: View {
 #Preview {
     // Preview menggunakan Text dummy untuk mensimulasikan file MainMapViewModel
     // Asumsi MainMapViewModel.MapMode memiliki enum .explore
-    MapModeSheet(mapMode: .constant(.explore))
+    MapModeView(mapMode: .constant(.explore))
 }
 
 

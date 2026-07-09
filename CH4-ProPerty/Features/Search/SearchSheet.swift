@@ -25,36 +25,21 @@ struct SearchSheet: View {
     @FocusState private var isFieldFocused: Bool
 
     var body: some View {
-        VStack(spacing: 0) {
-            
-            // MARK: - Search Bar Custom
-            HStack(spacing: 10) {
-                Image(systemName: "magnifyingglass").foregroundColor(Color(.textSecondary))
-                
-                TextField(L.t(.searchLocation), text: $vm.query)
-                    .focused($isFieldFocused)
-                    .font(.body)
-                    .textCase(nil)
-                    .textInputAutocapitalization(.never) 
-                    .disableAutocorrection(true)
-                    .submitLabel(.search)
-                
-                if vm.isLoading {
-                    ProgressView().controlSize(.small)
-                } else {
-                    Image(systemName: "mic.fill").foregroundColor(Color(.textSecondary))
-                }
-            } else {
-                ForEach(vm.results) { place in
-                    SearchResultRow(place: place, isBookmarked: vm.isBookmarked(place),
-                                     onBookmark: { vm.toggleBookmark(for: place) },
-                                     onTap: { selectAndCollapse(place) })
-                        .listRowSeparator(.hidden)
-                }
+        // MARK: - Daftar Hasil Pencarian
+        List {
+            ForEach(vm.results) { place in
+                SearchResultRow(
+                    place: place,
+                    isBookmarked: vm.isBookmarked(place),
+                    onBookmark: { vm.toggleBookmark(for: place) },
+                    onTap: { selectAndCollapse(place) }
+                )
+                .listRowSeparator(.hidden)
             }
         }
         .listStyle(.plain)
         .safeAreaInset(edge: .top) {
+            // Memanggil Search Bar Custom di bagian atas
             searchField
         }
         .background(Color(.cardBackground).ignoresSafeArea())
@@ -86,28 +71,35 @@ struct SearchSheet: View {
         onSelect(place)
     }
 
+    // MARK: - Search Bar Custom
     private var searchField: some View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass").foregroundColor(Color(.textSecondary))
-            TextField("Search a location", text: $vm.query)
+            
+            // Kolom input teks
+            TextField(L.t(.searchLocation), text: $vm.query)
                 .focused($isFieldFocused)
+                .font(.body)
+                .textCase(nil)
                 .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)
                 .submitLabel(.search)
+            
+            // Indikator loading atau icon mic
             if vm.isLoading {
                 ProgressView().controlSize(.small)
             } else {
                 Image(systemName: "mic.fill").foregroundColor(Color(.textSecondary))
             }
-            
         }
+        .padding(.horizontal, 16)
         .frame(height: 50)
         .background(Color(UIColor.systemBackground))
         .clipShape(Capsule())
         .padding(.horizontal, 20)
         .padding(.vertical, 10)
         .background(Color(.cardBackground))
-        .offset(y:5)
+        .offset(y: 5)
     }
 }
 
@@ -121,7 +113,7 @@ struct SearchResultRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
             VStack(spacing: 0) {
-                CustomPinMarker()
+                CustomPinMarker() // Pastikan struct CustomPinMarker() sudah ada di file lain ya
 
                 if let distance = place.distanceLabel {
                     Text(distance)
@@ -182,11 +174,7 @@ struct SearchResultRow: View {
     SearchSheetDockedPreview(detent: .large)
 }
 
-/// Wrapper preview yang bener-bener nge-present `SearchSheet` lewat `.sheet`,
-/// bukan manggil langsung sebagai root view -- karena `.presentationDetents`
-/// cuma berlaku kalau content-nya beneran di-present sebagai sheet. Ada
-/// placeholder background "map" biar konteks docked-nya (nempel kecil di
-/// bawah layar, bukan ngambang full-screen) keliatan jelas di canvas preview.
+/// Wrapper preview yang bener-bener nge-present `SearchSheet` lewat `.sheet`
 private struct SearchSheetDockedPreview: View {
     @State private var detent: PresentationDetent
     @State private var showSheet = true
@@ -225,5 +213,3 @@ private struct SearchSheetDockedPreview: View {
         }
     }
 }
-
-
