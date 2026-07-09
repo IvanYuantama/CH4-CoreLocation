@@ -12,28 +12,28 @@ import Translation
 struct PlaceDetailView: View {
     let place: PlaceResult
     @Environment(\.dismiss) private var dismiss
-    
+
     @StateObject private var vm: PlaceDetailViewModel
     @StateObject private var weather = WeatherManager()
     @EnvironmentObject private var settings : SettingsViewModel
-    
+
     init(place: PlaceResult, previewVM: PlaceDetailViewModel? = nil) {
         self.place = place
         _vm = StateObject(wrappedValue: previewVM ?? PlaceDetailViewModel(place: place))
     }
-    
+
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 20) {
-                
+
                 headerSection
-                
+
                 actionAndWeatherRow
-                
+
                 miniMap
-                
+
                 overviewSection
-                
+
                 if vm.isFetchingIntel {
                     Center { ProgressView(L.t(.analyzingArea, settings.selectedLanguage)).padding() }
                 } else if let intel = vm.intel {
@@ -55,23 +55,23 @@ struct PlaceDetailView: View {
             Task { await vm.regenerateSummary() }
         }
     }
-    
+
     // MARK: - Subviews
-    
+
     private var headerSection: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(place.name)
                     .font(Theme.Typography.title)
                     .foregroundColor(Color(.textPrimary))
-                
+
                 Text(place.subtitle)
                     .font(Theme.Typography.subtitle)
                     .foregroundColor(Color(.textSecondary))
             }
-            
+
             Spacer()
-            
+
             Button { dismiss() } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 22, weight: .bold))
@@ -83,7 +83,7 @@ struct PlaceDetailView: View {
         }
         .padding(.top,30)
     }
-    
+
     private var actionAndWeatherRow: some View {
         HStack(spacing: 11) {
             Button(action: openInMaps) {
@@ -99,7 +99,7 @@ struct PlaceDetailView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
             }
-            
+
             if weather.isLoading {
                 HStack() {
                     ForEach(0..<3, id: \.self) { _ in
@@ -116,7 +116,7 @@ struct PlaceDetailView: View {
         }
         .padding(.vertical, 4)
     }
-    
+
     private func uvIcon(for uvLabel: String) -> String {
         let value = uvLabel.components(separatedBy: " ").first.flatMap { Int($0) } ?? 0
         switch value {
@@ -126,7 +126,7 @@ struct PlaceDetailView: View {
         default:    return "sun.max.trianglebadge.exclamationmark.fill"
         }
     }
-    
+
     private var miniMap: some View {
         Map(initialPosition: .region(
             MKCoordinateRegion(
@@ -134,28 +134,29 @@ struct PlaceDetailView: View {
                 span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
             )
         )) {
-            Marker(place.name, coordinate: place.coordinate)
-                .tint(Color(red: 0.89, green: 0.22, blue: 0.21))
+            Annotation(place.name, coordinate: place.coordinate, anchor: .bottom) {
+                CustomPinMarker()
+            }
         }
         .allowsHitTesting(false)
         .frame(height: 140)
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
-    
+
     private var overviewSection: some View {
         let lang = settings.selectedLanguage
         return VStack(alignment: .leading, spacing: 8) {
             Text(L.t(.overview, lang))
                 .font(Theme.Typography.option)
                 .foregroundColor(Color(.textPrimary))
-            
+
             let displayText = vm.translatedOverview ?? vm.aiOverview ?? L.t(.analyzingParams, lang)
-            
+
             Text(displayText)
                 .font(Theme.Typography.subtitle)
                 .foregroundColor(Color(.textSecondary))
                 .lineSpacing(4)
-            
+
             if vm.isSummarizing && (vm.aiOverview ?? "").isEmpty {
                 HStack(spacing: 8) {
                     ProgressView().controlSize(.small)
@@ -167,71 +168,62 @@ struct PlaceDetailView: View {
             }
         }
     }
-    
+
     // MARK: - Dynamic Details Section
-    
+
     private func detailsSection(intel: PlaceIntel) -> some View {
         let lang = settings.selectedLanguage
         return VStack(alignment: .leading, spacing: 24) {
             Text(L.t(.details, lang))
                 .font(Theme.Typography.title)
                 .foregroundColor(Color(.textPrimary))
-            
+
             let envCards = generateEnvironmentCards(intel: intel)
             if !envCards.isEmpty { renderCategory(title: L.t(.secEnvironment, lang), cards: envCards) }
-            
+
             let accCards = generateAccessibilityCards(intel: intel)
             if !accCards.isEmpty { Divider(); renderCategory(title: L.t(.secAccessibilities, lang), cards: accCards) }
-            
+
             let socialCards = generateSocialCards(intel: intel)
             if !socialCards.isEmpty { Divider(); renderCategory(title: L.t(.secSocial, lang), cards: socialCards) }
-            
+
             let geoCards = generateGeographyCards(intel: intel)
             if !geoCards.isEmpty { Divider(); renderCategory(title: L.t(.secGeography, lang), cards: geoCards) }
-            
+
             let netCards = generateNetworkCards(intel: intel)
             if !netCards.isEmpty { Divider(); renderCategory(title: L.t(.secNetwork, lang), cards: netCards) }
         }
     }
-    
+
     private func openInMaps() {
         let location = CLLocation(latitude: place.coordinate.latitude, longitude: place.coordinate.longitude)
         let item = MKMapItem(location: location, address: nil)
         item.name = place.name
         item.openInMaps()
     }
-    
+
     // MARK: - Render Helpers
-    
+
     private func renderCategory(title: String, cards: [CardData]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(Theme.Typography.section)
                 .foregroundColor(Color(.textPrimary))
-            
+
             let paired = pairCards(cards)
-            
+
             VStack(spacing: 0) {
                 ForEach(Array(paired.enumerated()), id: \.offset) { _, row in
                     if row.right?.isTall == true {
                         tallRow(leftCards: row.leftGroup, rightCard: row.right!)
                     } else {
-                        // Normal row: satu card kiri, satu card kanan
                         HStack(alignment: .center, spacing: 16) {
-                            MetricCard(
-                                title: row.left.title,
-                                value: row.left.value,
-                                icon: row.left.icon
-                            )
-                            .frame(maxWidth: .infinity)
-                            
-                            if let right = row.right {
-                                MetricCard(
-                                    title: right.title,
-                                    value: right.value,
-                                    icon: right.icon
-                                )
+                            MetricCard(title: row.left.title, value: row.left.value, icon: row.left.icon)
                                 .frame(maxWidth: .infinity)
+
+                            if let right = row.right {
+                                MetricCard(title: right.title, value: right.value, icon: right.icon)
+                                    .frame(maxWidth: .infinity)
                             } else {
                                 Spacer().frame(maxWidth: .infinity)
                             }
@@ -241,20 +233,16 @@ struct PlaceDetailView: View {
             }
         }
     }
-    
+
     private func tallRow(leftCards: [CardData], rightCard: CardData) -> some View {
         HStack(alignment: .top, spacing: 16) {
             VStack(spacing: 0) {
                 ForEach(leftCards) { card in
-                    MetricCard(
-                        title: card.title,
-                        value: card.value,
-                        icon: card.icon
-                    )
+                    MetricCard(title: card.title, value: card.value, icon: card.icon)
                 }
             }
             .frame(maxWidth: .infinity)
-            
+
             MetricCard(
                 title: rightCard.title,
                 value: rightCard.value,
@@ -265,23 +253,23 @@ struct PlaceDetailView: View {
             .frame(maxWidth: .infinity)
         }
     }
-    
+
     private struct CardRow {
         let left: CardData
         let leftGroup: [CardData]
         let right: CardData?
     }
-    
+
     private func pairCards(_ cards: [CardData]) -> [CardRow] {
         var rows: [CardRow] = []
         var i = 0
-        
+
         while i < cards.count {
             let current = cards[i]
-            
+
             if i + 1 < cards.count && cards[i + 1].isTall {
                 let tallCard = cards[i + 1]
-                
+
                 var leftGroup: [CardData] = [current]
                 var j = i + 2
                 while j < cards.count && !cards[j].isTall {
@@ -292,28 +280,19 @@ struct PlaceDetailView: View {
                         break
                     }
                 }
-                
-                rows.append(CardRow(
-                    left: current,
-                    leftGroup: leftGroup,
-                    right: tallCard
-                ))
+
+                rows.append(CardRow(left: current, leftGroup: leftGroup, right: tallCard))
                 i = j
-                
             } else {
                 let right = i + 1 < cards.count ? cards[i + 1] : nil
-                rows.append(CardRow(
-                    left: current,
-                    leftGroup: [current],
-                    right: right
-                ))
+                rows.append(CardRow(left: current, leftGroup: [current], right: right))
                 i += 2
             }
         }
-        
+
         return rows
     }
-    
+
     private func generateEnvironmentCards(intel: PlaceIntel) -> [CardData] {
         let lang = settings.selectedLanguage
         var cards: [CardData] = []
@@ -328,7 +307,7 @@ struct PlaceDetailView: View {
         }
         return cards
     }
-    
+
     private func generateAccessibilityCards(intel: PlaceIntel) -> [CardData] {
         let lang = settings.selectedLanguage
         var cards: [CardData] = []
@@ -349,7 +328,7 @@ struct PlaceDetailView: View {
         }
         return cards
     }
-    
+
     private func generateSocialCards(intel: PlaceIntel) -> [CardData] {
         let lang = settings.selectedLanguage
         var cards: [CardData] = []
@@ -364,7 +343,7 @@ struct PlaceDetailView: View {
         }
         return cards
     }
-    
+
     private func generateGeographyCards(intel: PlaceIntel) -> [CardData] {
         let lang = settings.selectedLanguage
         var cards: [CardData] = []
@@ -373,7 +352,7 @@ struct PlaceDetailView: View {
         }
         return cards
     }
-    
+
     private func generateNetworkCards(intel: PlaceIntel) -> [CardData] {
         let lang = settings.selectedLanguage
         var cards: [CardData] = []
@@ -384,9 +363,9 @@ struct PlaceDetailView: View {
         if let mUl = intel.mobileUpload    { cards.append(CardData(title: L.t(.cardCellularUpload, lang), value: "\(mUl) Mbps", icon: "")) }
         return cards
     }
-    
+
     // MARK: - Helper Components & Structures
-    
+
     struct CardData: Identifiable {
         let id = UUID()
         let title: String
@@ -395,7 +374,7 @@ struct PlaceDetailView: View {
         var isTall: Bool = false
         var decorativeIcon: String? = nil
     }
-    
+
     struct Center<Content: View>: View {
         @ViewBuilder var content: Content
         var body: some View {
@@ -406,21 +385,18 @@ struct PlaceDetailView: View {
             }
         }
     }
-    
+
     #Preview("Place Detail — Hi-Fi") {
         let previewVM = PlaceDetailViewModel.preview()
-        
+
         return Color.gray.opacity(0.3)
             .ignoresSafeArea()
             .sheet(isPresented: .constant(true)) {
-                PlaceDetailView(
-                    place: previewVM.place,
-                    previewVM: previewVM
-                )
-                .environmentObject(SettingsViewModel())
-                .presentationDetents([.height(420), .large])
-                .presentationCornerRadius(30)
-                .presentationDragIndicator(.visible)
-        }
+                PlaceDetailView(place: previewVM.place, previewVM: previewVM)
+                    .environmentObject(SettingsViewModel())
+                    .presentationDetents([.height(420), .large])
+                    .presentationCornerRadius(30)
+                    .presentationDragIndicator(.visible)
+            }
     }
 }

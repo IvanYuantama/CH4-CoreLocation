@@ -10,39 +10,53 @@ import CoreLocation
 import MapKit
 
 enum ReverseGeocodeService {
-    /// Koordinat → PlaceResult (nama + alamat) via MapKit (menggantikan CLGeocoder).
     static func place(at coordinate: CLLocationCoordinate2D, from origin: CLLocationCoordinate2D) async -> PlaceResult? {
-        
+        let target = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        let originLoc = CLLocation(latitude: origin.latitude, longitude: origin.longitude)
+        let distanceKm = originLoc.distance(from: target) / 1000
+
+        // 1) Coba MKLocalSearch (POI / alamat presisi)
         let request = MKLocalSearch.Request()
-        // Set center dan span sangat sempit agar pencarian fokus tepat pada titik yang diketuk
-        request.region = MKCoordinateRegion(
-            center: coordinate,
-            span: MKCoordinateSpan(latitudeDelta: 0.001, longitudeDelta: 0.001)
-        )
+        request.region = MKCoordinateRegion(center: coordinate,
+                                            span: MKCoordinateSpan(latitudeDelta: 0.001, longitudeDelta: 0.001))
         request.resultTypes = [.address, .pointOfInterest]
-        
-        guard let response = try? await MKLocalSearch(request: request).start(),
-              let mapItem = response.mapItems.first else {
-            return nil
+
+        if let response = try? await MKLocalSearch(request: request).start(),
+           let item = response.mapItems.first,
+           let name = item.name ?? item.address?.shortAddress {
+            return PlaceResult(
+                name: name,
+                subtitle: item.address?.fullAddress ?? "",
+                latitude: coordinate.latitude, longitude: coordinate.longitude, distanceKm: distanceKm
+            )
         }
-        
-        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
 
-        // 🌟 PERBAIKAN 1: Gunakan shortAddress sebagai fallback nama jika mapItem.name kosong
-        let name = mapItem.name ?? mapItem.address?.shortAddress ?? "Selected location"
+        // 2) Fallback: CLGeocoder → nama wilayah administratif (selalu dapat sesuatu)
+        let targetLoc = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+                
+                if let request = MKReverseGeocodingRequest(location: targetLoc),
+                   let mapItems = try? await request.mapItems,
+                   let item = mapItems.first {
+                    
+                    // Di iOS 26, kita langsung menggunakan 'name' dan 'address' bawaan MapKit.
+                    // Tidak perlu lagi merangkai subLocality, locality, dll secara manual!
+                    let name = item.name ?? item.address?.shortAddress ?? "Selected location"
+                    let subtitle = item.address?.fullAddress ?? ""
+                    
+                    return PlaceResult(
+                        name: name,
+                        subtitle: subtitle,
+                        latitude: coordinate.latitude,
+                        longitude: coordinate.longitude,
+                        distanceKm: distanceKm
+                    )
+                }
 
-        // 🌟 PERBAIKAN 2: Langsung ambil fullAddress yang sudah diformat rapi oleh Apple
-        let subtitle = mapItem.address?.fullAddress ?? ""
-
-        let originLocation = CLLocation(latitude: origin.latitude, longitude: origin.longitude)
-        let distanceKm = originLocation.distance(from: location) / 1000
-
+        // 3) Benar-benar tak ada data → koordinat (jarang terjadi)
         return PlaceResult(
-            name: name,
-            subtitle: subtitle,
-            latitude: coordinate.latitude,
-            longitude: coordinate.longitude,
-            distanceKm: distanceKm
+            name: "Selected location",
+            subtitle: String(format: "%.5f, %.5f", coordinate.latitude, coordinate.longitude),
+            latitude: coordinate.latitude, longitude: coordinate.longitude, distanceKm: distanceKm
         )
     }
 }

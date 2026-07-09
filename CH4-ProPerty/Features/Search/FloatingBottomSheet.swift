@@ -80,7 +80,7 @@ struct FloatingBottomSheet<Content: View>: View {
     private func bottomPadding(in geo: GeometryProxy) -> CGFloat {
         switch state {
         case .collapsed:
-            return 30
+            return 45
         case .expanded:
             return -20
         }
@@ -179,22 +179,24 @@ struct FloatingSearchSheet: View {
     private var searchField: some View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass").foregroundColor(Color(.textPrimary))
-            TextField("Search a location", text: $vm.query)
+            TextField(L.t(.searchLocation), text: $vm.query)
                 .focused($isFieldFocused)
+                .font(Theme.Typography.category)
                 .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)
                 .submitLabel(.search)
-                .font(.system(size: 14))
             if vm.isLoading {
                 ProgressView().controlSize(.small)
             } else {
                 Image(systemName: "mic.fill").foregroundColor(Color(.textPrimary))
             }
         }
-        .frame(height: 50)
+        .frame(maxWidth: .infinity, minHeight: 50)
+        .padding(.horizontal, 16)
         .background(Color(.cardBackground))
         .clipShape(Capsule())
-        .padding(.horizontal, 20)
+        .shadow(color: .black.opacity(0.12), radius: 6, y: 3)
+        .padding(.horizontal, state == .expanded ? 16 : 0)
         .padding(.bottom, 10)
     }
 }

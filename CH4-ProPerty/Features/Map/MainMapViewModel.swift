@@ -4,21 +4,9 @@
 //
 //  Created by Andhika Satria on 05/07/26.
 //
-//  CHANGELOG (adaptasi behavior anchor/compass/map-mode):
-//  - `useHybrid: Bool` diganti `MapMode` enum (.explore/.satellite) supaya bisa dipakai
-//    juga untuk state ikon tombol Map Mode.
-//  - Tambah `AnchorState` enum (.free/.center/.headingLock) + `handleAnchorTap` sebagai
-//    state machine 3 tahap, `handleCompassTap` (jalur keluar alternatif dari Heading-Lock).
-//  - Tambah `is3D` + `toggle3D()` untuk tombol 2D/3D (cuma relevan saat mode Satellite).
-//  - `zoomToUserLocation` diganti `followLocation(_:heading:)` yang men-gate pergerakan
-//    kamera otomatis berdasar anchorState (Free = diabaikan, beda dari behavior lama
-//    yang selalu maksa recenter tiap `lastLocation` berubah).
-//  - `updateMapCenter` sekarang juga mendeteksi gesture manual user (pan/zoom/rotate)
-//    lewat flag `isProgrammaticCameraUpdate`, dan auto-drop ke `.free` sesuai keputusan
-//    "manual pan saat Center/Heading-Lock otomatis balik ke Free".
-//  - Kamera dibangun lewat `rebuildCamera()`: pakai `.region(...)` yang simpel selama
-//    Explore+Free/Center, dan `.camera(MapCamera(...))` begitu butuh heading-lock atau
-//    mode Satellite (karena cuma MapCamera yang punya heading & pitch).
+//
+//  MainMapViewModel.swift
+//  CH4-ProPerty
 //
 
 import SwiftUI
@@ -27,20 +15,11 @@ import Combine
 
 @MainActor
 class MainMapViewModel: ObservableObject {
-    // MainMapViewModel
     @Published var searchDetent: PresentationDetent = .height(64)
     static let bali = CLLocationCoordinate2D(latitude: -8.65, longitude: 115.16)
 
-    enum AnchorState {
-        case free
-        case center
-        case headingLock
-    }
-
-    enum MapMode {
-        case explore
-        case satellite
-    }
+    enum AnchorState { case free, center, headingLock }
+    enum MapMode { case explore, satellite }
 
     @Published var camera: MapCameraPosition = .region(
         MKCoordinateRegion(center: bali, span: MKCoordinateSpan(latitudeDelta: 0.15, longitudeDelta: 0.15))
@@ -52,26 +31,26 @@ class MainMapViewModel: ObservableObject {
     @Published var showSearch = false
     @Published var pinned: PlaceResult?
     @Published var detail: PlaceResult?
-    // Variabel bookmarks dihapus dari sini karena sudah diurus oleh SearchViewModel
 
-    /// Dipakai di `.mapStyle(vm.mapStyle)` — hybrid = citra satelit tapi nama jalan/label tetap ada.
+    /// Dipakai di `.mapStyle(vm.mapStyle)`.
+    /// Satellite pakai elevation `.realistic` supaya toggle 2D/3D benar-benar terlihat (flyover).
     var mapStyle: MapStyle {
-        mapMode == .satellite ? .hybrid : .standard
+        switch mapMode {
+        case .satellite: return .hybrid(elevation: .realistic)
+        case .explore:   return .standard(elevation: .flat)
+        }
     }
 
-    // Sumber kebenaran posisi kamera — semua perubahan lewat sini, lalu di-render ke `camera`.
+    // Sumber kebenaran posisi kamera.
     private var cameraCenter: CLLocationCoordinate2D = bali
     private var cameraDistance: CLLocationDistance = 12_000
     private var cameraHeading: CLLocationDirection = 0
 
-    /// Ditandai `true` sesaat sebelum kita assign `camera` sendiri (recenter/heading-lock/3D),
-    /// supaya `updateMapCenter` tahu perubahan ini BUKAN gesture user dan tidak perlu drop ke Free.
-    /// Catatan: pendekatan flag seperti ini best-effort — kalau ada animasi programatic yang
-    /// tumpang tindih sangat cepat dengan gesture user, ada kemungkinan kecil salah klasifikasi.
-    /// Perlu ditest langsung di device.
+    /// Ditandai `true` sesaat sebelum kita assign `camera` sendiri, supaya `updateMapCenter`
+    /// tahu perubahan ini BUKAN gesture user (best-effort — perlu tes di device).
     private var isProgrammaticCameraUpdate = false
 
-    // MARK: - Map camera change (dipanggil dari `.onMapCameraChange`)
+    // MARK: - Map camera change
     func updateMapCenter(_ context: MapCameraUpdateContext) {
         mapCenter = context.region.center
 
@@ -80,26 +59,20 @@ class MainMapViewModel: ObservableObject {
             return
         }
 
-        // Heuristik: MapCompass() bawaan Apple tidak expose callback tap sendiri — begitu
-        // ditekan, dia langsung reset heading map ke utara (0°) lewat binding `camera`, bukan
-        // lewat kode kita. Kalau kita lagi Heading-Lock dan heading yang baru mendadak balik
-        // ke ~0 tanpa kita yang gerakin (isProgrammaticCameraUpdate == false), kemungkinan
-        // besar itu tap compass -> turun ke Center (bukan Free, sesuai Poin 6 spec).
-        // Catatan: heuristik ini best-effort, bisa false-positive kalau user KEBETULAN
-        // muter HP dan pas berhenti persis di utara — risikonya kecil & dampaknya ringan.
+        // Heuristik tap compass bawaan (reset ke ~0°) saat Heading-Lock → turun ke Center.
         if anchorState == .headingLock, abs(context.camera.heading) < 1 {
             anchorState = .center
             cameraHeading = 0
             return
         }
 
-        // Sampai sini berarti perubahan dari gesture user (pan/zoom/rotate manual).
+        // Gesture manual user (pan/zoom/rotate) → keluar dari mode terkunci.
         if anchorState != .free {
             anchorState = .free
         }
     }
 
-    // MARK: - Anchor button: siklus Free -> Center -> Heading-Lock -> Center
+    // MARK: - Anchor button: Free -> Center -> Heading-Lock -> Center
     func handleAnchorTap(currentLocation: CLLocationCoordinate2D?, currentHeading: CLLocationDirection?) {
         switch anchorState {
         case .free:
@@ -118,15 +91,13 @@ class MainMapViewModel: ObservableObject {
         }
     }
 
-    /// Dipanggil tiap heading device berubah (sudah di-throttle di LocationManager).
-    /// Cuma berefek kalau lagi Heading-Lock.
+    /// Dipanggil tiap heading device berubah (throttled). Cuma berefek saat Heading-Lock.
     func updateHeadingIfLocked(_ heading: CLLocationDirection) {
         guard anchorState == .headingLock else { return }
         moveCamera(to: cameraCenter, heading: heading, animated: false)
     }
 
-    /// Dipanggil tiap `lastLocation` berubah. Beda dari `zoomToUserLocation` versi lama:
-    /// sekarang di-gate oleh anchorState — kalau Free, diabaikan (user lagi bebas lihat area lain).
+    /// Dipanggil tiap `lastLocation` berubah, di-gate anchorState.
     func followLocation(_ coordinate: CLLocationCoordinate2D, heading: CLLocationDirection?) {
         switch anchorState {
         case .free:
@@ -138,12 +109,17 @@ class MainMapViewModel: ObservableObject {
         }
     }
 
+    /// Tap compass → peta balik ke utara. Kalau Heading-Lock, turun ke Center.
+    func resetHeadingNorth() {
+        if anchorState == .headingLock { anchorState = .center }
+        cameraHeading = 0
+        rebuildCamera(animated: true)
+    }
+
     // MARK: - Map Mode (Explore / Satellite)
     func selectMapMode(_ mode: MapMode) {
         mapMode = mode
-        if mode == .explore {
-            is3D = false // 2D/3D cuma relevan & tampil di Satellite
-        }
+        if mode == .explore { is3D = false } // 2D/3D cuma relevan di Satellite
         rebuildCamera(animated: true)
     }
 
@@ -153,11 +129,14 @@ class MainMapViewModel: ObservableObject {
         rebuildCamera(animated: true)
     }
 
-    // MARK: - Existing behaviors (tidak berubah secara logika)
+    // MARK: - Pin & selection
     func handleMapTap(at coordinate: CLLocationCoordinate2D, origin: CLLocationCoordinate2D) {
+        anchorState = .free // jangan ke-yank balik ke device selama melihat pin
         Task {
+            // `origin` selalu device (dipasok dari View) → jarak diukur dari device user.
             guard let place = await ReverseGeocodeService.place(at: coordinate, from: origin) else { return }
             self.pinned = place
+            self.moveCamera(to: coordinate, heading: cameraHeading, animated: true) // pindah ke lokasi
             self.detail = place
         }
     }
@@ -165,12 +144,24 @@ class MainMapViewModel: ObservableObject {
     func selectPlace(_ place: PlaceResult) {
         showSearch = false
         pinned = place
-        anchorState = .free // lokasi hasil search bukan device location, keluar dari siklus anchor
+        anchorState = .free
         moveCamera(to: place.coordinate, heading: 0, distance: 6_000, animated: true)
 
         Task {
             try? await Task.sleep(for: .seconds(0.5))
             self.detail = place
+        }
+    }
+
+    /// Sheet detail ditutup → hapus pin & kembalikan anchor/kamera ke device user.
+    func clearSelection(device: CLLocationCoordinate2D?) {
+        pinned = nil
+        detail = nil
+        if let device {
+            anchorState = .center
+            moveCamera(to: device, heading: 0, animated: true) // anchor selalu di titik device
+        } else {
+            anchorState = .free
         }
     }
 
@@ -194,7 +185,6 @@ class MainMapViewModel: ObservableObject {
         let newCamera: MapCameraPosition
 
         if mapMode == .satellite || anchorState == .headingLock {
-            // Butuh MapCamera penuh: Satellite bisa perlu pitch, Heading-Lock butuh rotasi (heading).
             newCamera = .camera(
                 MapCamera(
                     centerCoordinate: cameraCenter,
@@ -204,8 +194,7 @@ class MainMapViewModel: ObservableObject {
                 )
             )
         } else {
-            // Explore + Free/Center biasa: region simpel, sama seperti behavior awal.
-            let delta = max(0.01, cameraDistance / 111_000) // konversi kasar meter -> derajat span
+            let delta = max(0.01, cameraDistance / 111_000)
             newCamera = .region(
                 MKCoordinateRegion(
                     center: cameraCenter,
@@ -215,9 +204,7 @@ class MainMapViewModel: ObservableObject {
         }
 
         if animated {
-            withAnimation(.easeInOut(duration: 0.5)) {
-                camera = newCamera
-            }
+            withAnimation(.easeInOut(duration: 0.5)) { camera = newCamera }
         } else {
             camera = newCamera
         }
