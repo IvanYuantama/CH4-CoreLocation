@@ -76,12 +76,6 @@ Not using Supabase Free Trial
 **We dropped it because:**
 Supabase free tier removed direct PostgreSQL connections for new projects our API request too slow for geojson data. We migrated to NeonDB, which provides direct connections and full PostGIS support on the free tier.
 
-**We considered:**
-Using FoundationModels to make a summary.
-
-**We dropped it because:**
-We tried the FoundationModels, but it only works when our device (Iphone 17) is using English as it's general system languange. From what we found, FoundationModels has several language it currently support, but Indonesia wasn't on the list. We did tried with several other language on the list as our general system language, but the model also didn't work. For as long as we've tested, the FoundationModels only work when the general system language is English. We then thought to only use this model when the device language is English and replace it with a template when other language is used, but then we come to a sense like "Why not just use a template for every device language and not use an AI model to make a summary?"
-
 ---
 
 ## Real Limitations Hit
