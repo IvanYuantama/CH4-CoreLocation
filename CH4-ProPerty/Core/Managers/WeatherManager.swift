@@ -16,13 +16,13 @@ final class WeatherManager: ObservableObject {
         let temperature: String
         let humidity: String
         let uv: String
-        let weatherSymbol: String  
+        let weatherSymbol: String
     }
-
+    
     @Published var snapshot: Snapshot?
     @Published var isLoading = false
     private var lastFetchLocation: CLLocation?
-
+    
     func loadIfNeeded(for coordinate: CLLocationCoordinate2D) {
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         if let lastFetchLocation,

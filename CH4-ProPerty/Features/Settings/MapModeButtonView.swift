@@ -36,7 +36,7 @@ struct MapModeButtonView: View {
                 .frame(width: 50, height: 45)
                 .background(Color(.background))
                 .clipShape(RoundedRectangle(cornerRadius: 16))
-                .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
+                .shadow(color: .black.opacity(0.3), radius: 5, y: 2)
                 .scaleEffect(mapModePressed ? 1.2 : 1)
         }
         .buttonStyle(.plain)

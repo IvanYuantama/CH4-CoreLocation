@@ -47,7 +47,7 @@ struct SettingsMenuView: View {
         .padding(.horizontal, 16)
         .background(Color(.background))
         .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+        .shadow(color: .black.opacity(0.4), radius: 8, x: 0, y: 4)
         .sheet(item: $activeSheet) { sheet in
             Group {
                 switch sheet {

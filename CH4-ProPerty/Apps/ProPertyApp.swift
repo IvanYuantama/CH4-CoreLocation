@@ -14,7 +14,6 @@ struct ProPertyApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
-                // Menyuntikkan preferensi warna dari AppStorage ke seluruh aplikasi
                 .preferredColorScheme(settingsVM.activeColorScheme)
         }
     }

@@ -22,9 +22,9 @@ struct WeatherChip: View {
                 .foregroundColor(Color(.textPrimary))
         }
         .frame(width: 70, height: 28)
-        .background(Color(UIColor.systemBackground))
+        .background(Color(.background))
         .clipShape(RoundedRectangle(cornerRadius: 10))
-        .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
+        .shadow(color: .black.opacity(0.4), radius: 8, x: 0, y: 4)
     }
 }
 

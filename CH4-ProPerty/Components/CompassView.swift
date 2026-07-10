@@ -9,20 +9,20 @@ import SwiftUI
 import CoreLocation
 
 struct CompassView: View {
-    let heading: CLLocationDirection      // heading peta (derajat); 0 = utara
+    let heading: CLLocationDirection     
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(.regularMaterial)               // blur bulat ala native
+                    .fill(.regularMaterial)
                     .overlay(Circle().strokeBorder(Color.primary.opacity(0.06), lineWidth: 1))
-                    .shadow(color: .black.opacity(0.15), radius: 4, y: 2)
-                CompassNeedle()                            // jarum merah-utara / abu-selatan
+                    .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+                CompassNeedle()                            
                     .rotationEffect(.degrees(-heading))
             }
-            .frame(width: 44, height: 44)
+            .frame(width: 45, height: 45)
         }
         .buttonStyle(.plain)
     }

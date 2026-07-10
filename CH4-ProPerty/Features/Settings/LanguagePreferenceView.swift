@@ -45,7 +45,6 @@ struct LanguagePreferenceView: View {
 
     private func selectLanguage(_ code: String) {
         vm.selectedLanguage = code
-        // Beri kesempatan model on-device mencoba lagi generate Bahasa Indonesia native.
         vm.directIndonesianFailed = false
     }
 }
@@ -74,7 +73,7 @@ struct PreferenceRadioRow: View {
                         .stroke(isSelected ? Color(.brand) : Color.gray.opacity(0.5), lineWidth: 2)
                         .frame(width: 20, height: 20)
                     if isSelected {
-                        Circle().fill(Color(.brand)).frame(width: 12, height: 12)
+                        Circle().fill(Color(.iconBlue)).frame(width: 12, height: 12)
                     }
                 }
             }

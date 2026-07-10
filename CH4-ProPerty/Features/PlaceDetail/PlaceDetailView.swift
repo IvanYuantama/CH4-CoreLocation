@@ -32,6 +32,10 @@ struct PlaceDetailView: View {
 
                 miniMap
 
+                if vm.isSampleData {
+                    offlineBanner
+                }
+
                 overviewSection
 
                 if vm.isFetchingIntel {
@@ -79,6 +83,7 @@ struct PlaceDetailView: View {
                     .frame(width: 44, height: 44)
                     .background(Color(.cardBackground))
                     .clipShape(Circle())
+                    .shadow(color: .black.opacity(0.4), radius: 8, x: 0, y: 4)
             }
         }
         .padding(.top,30)
@@ -97,7 +102,7 @@ struct PlaceDetailView: View {
                 .frame(width: 118, height: 33)
                 .background(Theme.primary)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
-                .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
+                .shadow(color: .black.opacity(0.4), radius: 8, x: 0, y: 4)
             }
 
             if weather.isLoading {
@@ -115,6 +120,23 @@ struct PlaceDetailView: View {
             }
         }
         .padding(.vertical, 4)
+    }
+    
+    private var offlineBanner: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "wifi.slash")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.orange)
+            
+            Text(settings.selectedLanguage == "id" ? "Menampilkan data sampel (Offline)" : "Showing sample data (Offline)")
+                .font(Theme.Typography.description)
+                .foregroundColor(.orange)
+            
+            Spacer()
+        }
+        .padding(12)
+        .background(Color.orange.opacity(0.15))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
     private func uvIcon(for uvLabel: String) -> String {
@@ -134,8 +156,8 @@ struct PlaceDetailView: View {
                 span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
             )
         )) {
-            Annotation(place.name, coordinate: place.coordinate, anchor: .bottom) {
-                CustomPinMarker()
+            Annotation(place.name, coordinate: place.coordinate,anchor: .center) {
+                CustomPinMarkerMini()
             }
         }
         .allowsHitTesting(false)
@@ -144,31 +166,41 @@ struct PlaceDetailView: View {
     }
 
     private var overviewSection: some View {
-        let lang = settings.selectedLanguage
-        return VStack(alignment: .leading, spacing: 8) {
-            Text(L.t(.overview, lang))
-                .font(Theme.Typography.option)
-                .foregroundColor(Color(.textPrimary))
+            let lang = settings.selectedLanguage
+            return VStack(alignment: .leading, spacing: 8) {
+                Text(L.t(.overview, lang))
+                    .font(Theme.Typography.option)
+                    .foregroundColor(Color(.textPrimary))
 
-            let displayText = vm.translatedOverview ?? vm.aiOverview ?? L.t(.analyzingParams, lang)
+                let isWorking = vm.isSummarizing || vm.isTranslating
+                let currentText = vm.translatedOverview ?? vm.aiOverview ?? ""
 
-            Text(displayText)
-                .font(Theme.Typography.subtitle)
-                .foregroundColor(Color(.textSecondary))
-                .lineSpacing(4)
-
-            if vm.isSummarizing && (vm.aiOverview ?? "").isEmpty {
-                HStack(spacing: 8) {
-                    ProgressView().controlSize(.small)
-                    Text(L.t(.summarizing, lang))
+                if isWorking && currentText.isEmpty {
+                    SkeletonOverview()
+                        .padding(.top, 4)
+                } else if !currentText.isEmpty {
+                    Text(currentText)
                         .font(Theme.Typography.subtitle)
-                        .foregroundColor(Color(.brand))
+                        .foregroundColor(Color(.textSecondary))
+                        .lineSpacing(4)
+                } else if !isWorking {
+                    Text(L.t(.analyzingParams, lang))
+                        .font(Theme.Typography.subtitle)
+                        .foregroundColor(Color(.textSecondary))
+                        .lineSpacing(4)
                 }
-                .padding(.top, 4)
+
+                if isWorking {
+                    HStack(spacing: 8) {
+                        ProgressView().controlSize(.small)
+                        Text(L.t(.summarizing, lang))
+                            .font(Theme.Typography.subtitle)
+                            .foregroundColor(Color(.brand))
+                    }
+                    .padding(.top, 4)
+                }
             }
         }
-    }
-
     // MARK: - Dynamic Details Section
 
     private func detailsSection(intel: PlaceIntel) -> some View {
@@ -385,6 +417,35 @@ struct PlaceDetailView: View {
             }
         }
     }
+    
+        struct SkeletonOverview: View {
+            @State private var isAnimating = false
+
+            var body: some View {
+                VStack(alignment: .leading, spacing: 8) {
+                    skeletonLine() 
+                    skeletonLine()
+                    
+                    GeometryReader { geo in
+                        skeletonLine(width: geo.size.width * 0.6)
+                    }
+                    .frame(height: 16)
+                }
+                .onAppear {
+                    withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                        isAnimating = true
+                    }
+                }
+            }
+
+            private func skeletonLine(width: CGFloat? = nil) -> some View {
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color(UIColor.systemGray5))
+                    .frame(maxWidth: width ?? .infinity, alignment: .leading)
+                    .frame(height: 16)
+                    .opacity(isAnimating ? 0.4 : 1.0)
+            }
+        }
 
     #Preview("Place Detail — Hi-Fi") {
         let previewVM = PlaceDetailViewModel.preview()

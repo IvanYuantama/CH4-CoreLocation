@@ -5,11 +5,6 @@
 //  Created by Andhika Satria on 05/07/26.
 //
 
-//
-//  PlaceDetailViewModel.swift
-//  CH4-ProPerty
-//
-
 import SwiftUI
 import Translation
 import Combine
@@ -25,18 +20,23 @@ class PlaceDetailViewModel: ObservableObject {
     @Published var intel: PlaceIntel?
     @Published var isFetchingIntel = false
     @Published var errorMessage: String?
+    
+    @Published var isSampleData = false
 
-    // Bahasa Overview MENGIKUTI setting app ini — bukan bahasa device.
     @AppStorage("appLanguage") private var appLanguage: String = "en"
 
     let place: PlaceResult
     var prefersIndonesian: Bool { appLanguage == "id" }
+    
+    private var summaryTask: Task<Void, Never>?
 
     init(place: PlaceResult) { self.place = place }
 
     func loadDataAndSummarize() async {
         isFetchingIntel = true
         errorMessage = nil
+        isSampleData = false
+        
         do {
             let fetched = try await PlaceIntelService.fetchIntel(lat: place.latitude, lng: place.longitude)
             intel = fetched
@@ -45,6 +45,8 @@ class PlaceDetailViewModel: ObservableObject {
         } catch {
             isFetchingIntel = false
             errorMessage = error.localizedDescription
+            isSampleData = true
+            
             print("API Fetch Failed: \(error.localizedDescription)")
             let mock = PlaceIntel.mock(for: place.coordinate)
             intel = mock
@@ -52,29 +54,40 @@ class PlaceDetailViewModel: ObservableObject {
         }
     }
 
-    /// Buat ulang ringkasan memakai intel yang sudah ada — dipanggil saat bahasa app diganti.
     func regenerateSummary() async {
-        guard let intel else { return }
-        translatedOverview = nil
-        aiOverview = nil
-        await generateSummary(using: intel)
+        summaryTask?.cancel()
+        
+        let task = Task { @MainActor in
+            guard let intel else { return }
+            translatedOverview = nil
+            aiOverview = nil
+            await generateSummary(using: intel)
+        }
+        
+        summaryTask = task
+        await task.value
     }
 
     private func generateSummary(using intelData: PlaceIntel) async {
         isSummarizing = true
-        defer { isSummarizing = false }
+        defer {
+            if !Task.isCancelled { isSummarizing = false }
+        }
 
-        let wantIndonesian = prefersIndonesian   // sumber kebenaran: setting app
+        let wantIndonesian = prefersIndonesian
 
         if #available(iOS 26.0, *) {
             let outcome = await OverviewAI.summarize(
+                locationName: place.name,
                 intel: intelData,
                 preferIndonesian: wantIndonesian
             ) { [weak self] partial in
-                // Untuk ID, jangan tampilkan streaming English — tunggu hasil terjemahan penuh.
                 guard let self, !wantIndonesian else { return }
+                if Task.isCancelled { return }
                 self.aiOverview = partial
             }
+            
+            if Task.isCancelled { return }
 
             switch outcome {
             case .direct(let text):
@@ -82,42 +95,79 @@ class PlaceDetailViewModel: ObservableObject {
                 aiOverview = text
             case .needsTranslation(let english):
                 aiOverview = english
-                startTranslation()          // EN→ID via Apple Translation; gagal → template ID
+                startTranslation()
             }
         } else {
-            // iOS < 26: tanpa Apple Intelligence → template deterministik sesuai bahasa app.
             translatedOverview = nil
-            aiOverview = PlaceOverviewComposer.summary(for: intelData, indonesian: wantIndonesian)
+            aiOverview = PlaceOverviewComposer.summary(locationName: place.name,for: intelData, indonesian: wantIndonesian)
         }
     }
 
     func startTranslation() {
-        isTranslating = true
-        if translationConfig == nil {
-            translationConfig = .init(source: .init(identifier: "en"),
-                                      target: .init(identifier: "id"))
-        } else {
-            translationConfig?.invalidate()
+            isTranslating = true
+            
+            Task { @MainActor in
+                let availability = LanguageAvailability()
+                let status = await availability.status(
+                    from: Locale.Language(identifier: "en"),
+                    to: Locale.Language(identifier: "id")
+                )
+                
+                if status == .installed {
+                    self.translationConfig = .init(
+                        source: .init(identifier: "en"),
+                        target: .init(identifier: "id")
+                    )
+                } else {
+                    print("⚠️ [Translation] Bahasa belum terunduh. Membatalkan sheet terjemahan dan menggunakan fallback template.")
+                    
+                    if !Task.isCancelled {
+                        self.translatedOverview = self.intel.map { PlaceOverviewComposer.summary(locationName: place.name,for: $0, indonesian: true) }
+                        self.isTranslating = false
+                    }
+                }
+            }
         }
-    }
+    
+    private func simulateStreaming(text: String) async {
+            translatedOverview = ""
+            let words = text.components(separatedBy: " ")
+            
+            for (index, word) in words.enumerated() {
+                if Task.isCancelled { break }
+                
+                translatedOverview?.append(word)
+                if index < words.count - 1 {
+                    translatedOverview?.append(" ")
+                }
+                
+                let delay = UInt64.random(in: 30_000_000...80_000_000)
+                try? await Task.sleep(nanoseconds: delay)
+            }
+        }
 
     func processTranslation(session: TranslationSession) async {
-        guard let source = aiOverview else { isTranslating = false; return }
-        do {
-            let response = try await session.translate(source)
-            let text = response.targetText.trimmingCharacters(in: .whitespacesAndNewlines)
-            // Terjemahan kosong → template Indonesia.
-            translatedOverview = text.isEmpty
-                ? intel.map { PlaceOverviewComposer.summary(for: $0, indonesian: true) }
-                : text
-        } catch {
-            // Apple Translation gagal / paket bahasa tak ada → template Indonesia deterministik,
-            // bukan dibiarkan tampil English.
-            translatedOverview = intel.map { PlaceOverviewComposer.summary(for: $0, indonesian: true) }
+            guard let source = aiOverview else { isTranslating = false; return }
+            do {
+                let response = try await session.translate(source)
+                if Task.isCancelled { return }
+                
+                let text = response.targetText.trimmingCharacters(in: .whitespacesAndNewlines)
+                let finalText = text.isEmpty
+                    ? intel.map { PlaceOverviewComposer.summary(locationName: place.name, for: $0, indonesian: true) } ?? ""
+                    : text
+                
+                await simulateStreaming(text: finalText)
+                
+            } catch {
+                if !Task.isCancelled {
+                    let fallbackText = intel.map { PlaceOverviewComposer.summary(locationName: place.name, for: $0, indonesian: true) } ?? ""
+                    await simulateStreaming(text: fallbackText)
+                }
+            }
+            isTranslating = false
         }
-        isTranslating = false
-    }
-
+    
     static func preview() -> PlaceDetailViewModel {
         let vm = PlaceDetailViewModel(place: PlaceResult(
             name: "Canggu",

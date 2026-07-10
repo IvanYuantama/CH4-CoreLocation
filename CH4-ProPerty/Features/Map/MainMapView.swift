@@ -8,20 +8,18 @@
 import SwiftUI
 import CoreLocation
 import MapKit
-import Combine
 
 struct MainMapView: View {
     @StateObject private var vm = MainMapViewModel()
     @StateObject private var location = LocationManager()
     @StateObject private var settings = SettingsViewModel()
-
+    
     @State private var showSettings = false
     @State private var anchorPressed = false
-    @State private var mapHeading: CLLocationDirection = 0   // heading peta untuk compass (live)
     @Namespace private var mapScope
-
+    
     @State private var searchSheetState: FloatingSheetState = .collapsed
-
+    
     var body: some View {
         MapReader { proxy in
             ZStack(alignment: .top) {
@@ -34,6 +32,7 @@ struct MainMapView: View {
                         }
                     }
                 }
+                .safeAreaPadding(.bottom, vm.detail != nil ? 380 : 0)
                 .mapStyle(vm.mapStyle)
                 .mapControls {
                     MapScaleView(scope: mapScope).mapControlVisibility(.hidden)
@@ -41,9 +40,6 @@ struct MainMapView: View {
                 }
                 .onMapCameraChange(frequency: .onEnd) { context in
                     vm.updateMapCenter(context)
-                }
-                .onMapCameraChange(frequency: .continuous) { context in
-                    mapHeading = context.camera.heading   // compass real-time (smooth)
                 }
                 .onTapGesture { screenPoint in
                     if showSettings {
@@ -58,18 +54,10 @@ struct MainMapView: View {
                     let origin = location.lastLocation ?? vm.mapCenter   // jarak dari device
                     vm.handleMapTap(at: coordinate, origin: origin)
                 }
-                .onChange(of: location.lastLocation?.latitude) { _, _ in
-                    guard let coordinate = location.lastLocation else { return }
-                    vm.followLocation(coordinate, heading: location.heading)
-                }
-                .onChange(of: location.heading) { _, newHeading in
-                    guard let newHeading else { return }
-                    vm.updateHeadingIfLocked(newHeading)
-                }
                 .onAppear {
                     location.requestLocation()
                 }
-
+                
                 // MARK: - Blur Header Overlay
                 Rectangle()
                     .fill(.ultraThinMaterial)
@@ -83,7 +71,7 @@ struct MainMapView: View {
                     )
                     .ignoresSafeArea(edges: .top)
                     .allowsHitTesting(false)
-
+                
                 // MARK: - Top Bar (Logo & Settings)
                 ZStack(alignment: .top) {
                     Image("app-name")
@@ -91,7 +79,7 @@ struct MainMapView: View {
                         .scaledToFit()
                         .frame(height: 26)
                         .padding(.top, 10)
-
+                    
                     HStack {
                         Spacer()
                         VStack(spacing: 0) {
@@ -104,9 +92,10 @@ struct MainMapView: View {
                                     .font(.system(size: 18, weight: .medium))
                                     .foregroundColor(Color(.textPrimary))
                                     .frame(width: 45, height: 45)
+                                    .background(Color(.background))
                                     .contentTransition(.symbolEffect(.replace))
                             }
-
+                            
                             if showSettings {
                                 SettingsMenuView()
                                     .transition(
@@ -120,35 +109,45 @@ struct MainMapView: View {
                         .frame(width: 45)
                         .background(Color(UIColor.systemBackground))
                         .clipShape(RoundedRectangle(cornerRadius: showSettings ? 16.0 : 22.5))
-                        .shadow(color: .black.opacity(0.12), radius: 6, y: 3)
+                        .shadow(color: .black.opacity(0.3), radius: 6, y: 3)
                     }
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
-
                 // MARK: - Floating Search + Controls
                 ZStack(alignment: .bottom) {
                     FloatingSearchSheet(
-                        center: location.lastLocation ?? vm.mapCenter,   // jarak hasil search dari device
+                        center: location.lastLocation ?? vm.mapCenter,
                         state: $searchSheetState,
                         onSelect: vm.selectPlace
                     )
                     .offset(x: 2, y: 35)
-
+                    
                     if searchSheetState == .collapsed {
                         HStack(alignment: .bottom) {
                             MapModeButtonView(vm: vm)
-
+                            
                             Spacer()
-
+                            
                             VStack(spacing: 12) {
-                                CompassView(heading: mapHeading) {
-                                    vm.resetHeadingNorth()
-                                    mapHeading = 0
+                                
+                                if vm.anchorState == .headingLock {
+                                    MapCompass(scope: mapScope)
+                                        .mapControlVisibility(.visible)
+                                        .frame(width: 45, height: 45)
+                                        .simultaneousGesture(
+                                            TapGesture().onEnded {
+                                                withAnimation(.easeInOut) {
+                                                    vm.anchorState = .center
+                                                }
+                                            }
+                                        )
                                 }
+                                
                                 if vm.mapMode == .satellite {
                                     dimensionButton
                                 }
+                                
                                 anchorButton
                             }
                         }
@@ -160,7 +159,7 @@ struct MainMapView: View {
                 .animation(.snappy, value: searchSheetState)
             }
             .sheet(item: $vm.detail, onDismiss: {
-                vm.clearSelection(device: location.lastLocation)   // pin hilang + anchor balik device
+                vm.clearSelection()
             }) { place in
                 PlaceDetailView(place: place)
                     .environmentObject(settings)
@@ -172,23 +171,27 @@ struct MainMapView: View {
         .mapScope(mapScope)
         .environmentObject(settings)
     }
-
-    // MARK: - Tombol 2D/3D (Satellite) — behavior Apple Maps
+    // MARK: - Tombol 2D/3D (Kustom UI + Engine Native)
     private var dimensionButton: some View {
-        Button {
-            withAnimation(.easeInOut(duration: 0.4)) { vm.toggle3D() }
-        } label: {
-            Text(vm.is3D ? "2D" : "3D")   // label = aksi berikutnya
-                .font(.system(size: 15, weight: .bold))
-                .foregroundColor(Color(.brand))
+        ZStack {
+            MapPitchToggle(scope: mapScope)
+                .mapControlVisibility(.visible)
                 .frame(width: 45, height: 45)
-                .background(Color(UIColor.systemBackground))
-                .clipShape(Circle())
-                .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
+            
+            ZStack {
+                Circle().fill(Color(.background))
+                
+                Text(vm.is3D ? "2D" : "3D")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(Color(.brand))
+            }
+            .frame(width: 45, height: 45)
+            .allowsHitTesting(false)
         }
-        .buttonStyle(.plain)
+        .clipShape(Circle())
+        .shadow(color: .black.opacity(0.3), radius: 5, y: 2)
     }
-
+    
     // MARK: - Anchor Button
     private var anchorButton: some View {
         Button {
@@ -196,25 +199,24 @@ struct MainMapView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 withAnimation(.bouncy(duration: 0.5)) { anchorPressed = false }
             }
-            vm.handleAnchorTap(
-                currentLocation: location.lastLocation,
-                currentHeading: location.heading
-            )
+            
+            vm.handleAnchorTap()
+            
             if location.lastLocation == nil { location.requestLocation() }
         } label: {
             Image(systemName: anchorIconName)
                 .font(.system(size: 20))
                 .foregroundColor(anchorIconColor)
                 .frame(width: 45, height: 45)
-                .background(Color(UIColor.systemBackground))
+                .background(Color(.background))
                 .clipShape(Circle())
-                .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
+                .shadow(color: .black.opacity(0.3), radius: 5, y: 2)
                 .scaleEffect(anchorPressed ? 1.2 : 1.0)
         }
         .buttonStyle(.plain)
         .offset(y: -1)
     }
-
+    
     private var anchorIconName: String {
         switch vm.anchorState {
         case .free: return "location"
@@ -222,11 +224,10 @@ struct MainMapView: View {
         case .headingLock: return "location.north.line.fill"
         }
     }
-
+    
     private var anchorIconColor: Color {
-        vm.anchorState == .headingLock ? .blue : Color(.brand)
-    }
-}
+        vm.anchorState == .headingLock ? Color("iconBlue") : Color(.iconBlue)
+    }}
 
 #Preview() {
     MainMapView()

@@ -13,8 +13,8 @@ import FoundationModels
 @MainActor
 enum OverviewAI {
     enum Outcome {
-        case direct(String)           // teks final siap tampil dalam bahasa target
-        case needsTranslation(String) // teks English AI yang perlu diterjemah ke ID
+        case direct(String)
+        case needsTranslation(String)
     }
 
     static func prewarm() {
@@ -22,36 +22,29 @@ enum OverviewAI {
         LanguageModelSession(model: .default).prewarm(promptPrefix: nil)
     }
 
-    /// Bahasa hasil ditentukan `preferIndonesian` (dari setting APP) — BUKAN bahasa device.
     static func summarize(
+        locationName: String,
         intel: PlaceIntel,
         preferIndonesian: Bool,
         onPartial: @escaping (String) -> Void
     ) async -> Outcome {
-        // Apple Intelligence tak tersedia (device tak dukung / AI dimatikan / bahasa device
-        // tak didukung) → template deterministik dalam bahasa APP.
         guard case .available = SystemLanguageModel.default.availability else {
             print("[OverviewAI] Apple Intelligence unavailable — pakai template \(preferIndonesian ? "ID" : "EN").")
-            return .direct(PlaceOverviewComposer.summary(for: intel, indonesian: preferIndonesian))
-        }
+            return .direct(PlaceOverviewComposer.summary(locationName: locationName, for: intel, indonesian: preferIndonesian))        }
 
         do {
-            // Selalu generate English lebih dulu (paling andal untuk model on-device,
-            // apa pun bahasa device).
-            let english = try await generateEnglish(intel: intel, onPartial: onPartial)
+            let english = try await generateEnglish(locationName: locationName, intel: intel, onPartial: onPartial)
             let trimmed = english.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty else {
-                return .direct(PlaceOverviewComposer.summary(for: intel, indonesian: preferIndonesian))
-            }
-            // EN → tampil langsung; ID → minta ViewModel menerjemahkan via Apple Translation.
+                return .direct(PlaceOverviewComposer.summary(locationName: locationName, for: intel, indonesian: preferIndonesian))            }
             return preferIndonesian ? .needsTranslation(english) : .direct(english)
         } catch {
             print("[OverviewAI] Generate error: \(error.localizedDescription) — fallback template.")
-            return .direct(PlaceOverviewComposer.summary(for: intel, indonesian: preferIndonesian))
-        }
+            return .direct(PlaceOverviewComposer.summary(locationName: locationName, for: intel, indonesian: preferIndonesian))        }
     }
 
     private static func generateEnglish(
+        locationName: String,
         intel: PlaceIntel,
         onPartial: @escaping (String) -> Void
     ) async throws -> String {
@@ -60,25 +53,27 @@ enum OverviewAI {
             instructions: """
             You are a property-location analyst. Summarize the given area parameters \
             into ONE short natural paragraph (max 70 words) for home buyers. \
-            Plain prose only — no lists, no headings, no markdown. Write in English.
+            Plain prose only — no lists, no headings, and absolutely NO markdown symbols (do not use **). \
+            Write in English.
             """
         )
         var latest = ""
-        for try await snapshot in session.streamResponse(to: promptText(intel: intel)) {
+        for try await snapshot in session.streamResponse(to: promptText(locationName: locationName, intel: intel)) {
             latest = snapshot.content
             onPartial(latest)
         }
         return latest
     }
 
-    private static func promptText(intel: PlaceIntel) -> String {
+    private static func promptText(locationName: String, intel: PlaceIntel) -> String {
         let popText   = intel.population    != nil ? "\(intel.population!) people" : "Unknown"
         let crimeText = intel.crimeTotal    != nil ? "\(intel.crimeTotal!) criminal cases reported" : "Unknown"
         let wifiText  = intel.wifiDownload  != nil ? "\(intel.wifiDownload!) Mbps DL" : "Unknown"
         let cellText  = intel.mobileDownload != nil ? "\(intel.mobileDownload!) Mbps DL" : "Unknown"
 
         return """
-        Area: a residential area in Indonesia (refer to it as "this area")
+        Location Name: \(locationName) (Start your summary using this exact name, do NOT use "This area")
+        Context: a residential area in Indonesia
         Temperature: \(intel.temperatureLevel)
         Flood risk: \(intel.floodRisk)
         Air quality: \(intel.airQualityLevel)

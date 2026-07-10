@@ -8,8 +8,6 @@
 import SwiftUI
 import MapKit
 
-// CLLocationCoordinate2D belum conform Equatable secara default -- wajib ada ini
-// supaya `.onChange(of: center)` di bawah bisa compile.
 extension CLLocationCoordinate2D: @retroactive Equatable {
     public static func == (lhs: CLLocationCoordinate2D, rhs: CLLocationCoordinate2D) -> Bool {
         lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude
@@ -39,12 +37,10 @@ struct SearchSheet: View {
         }
         .listStyle(.plain)
         .safeAreaInset(edge: .top) {
-            // Memanggil Search Bar Custom di bagian atas
         }
         .background(Color(.cardBackground).ignoresSafeArea())
         .onAppear { vm.setCenter(center) }
         .onChange(of: center) { _, newCenter in
-            // Map di-geser -> update origin buat re-sort jarak/relevansi hasil pencarian.
             vm.setCenter(newCenter)
         }
         .onChange(of: isFieldFocused) { _, focused in
@@ -53,9 +49,6 @@ struct SearchSheet: View {
             }
         }
         .onChange(of: detent) { _, newDetent in
-            // Kalau sheet di-collapse dari luar (mis. tap di map), pastikan keyboard
-            // ikut turun -- tanpa ini isFieldFocused nyangkut true & keyboard nongol
-            // padahal sheet-nya udah collapse.
             if newDetent != .large && newDetent != .medium {
                 isFieldFocused = false
             }
@@ -81,7 +74,7 @@ struct SearchResultRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
             VStack(spacing: 0) {
-                CustomPinMarker() // Pastikan struct CustomPinMarker() sudah ada di file lain ya
+                CustomPinMarker()
 
                 if let distance = place.distanceLabel {
                     Text(distance)
@@ -142,7 +135,6 @@ struct SearchResultRow: View {
     SearchSheetDockedPreview(detent: .large)
 }
 
-/// Wrapper preview yang bener-bener nge-present `SearchSheet` lewat `.sheet`
 private struct SearchSheetDockedPreview: View {
     @State private var detent: PresentationDetent
     @State private var showSheet = true

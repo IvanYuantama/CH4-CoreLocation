@@ -13,12 +13,10 @@ struct SmallCard: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 10) {
-            // Garis Biru Vertikal di Kiri
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color(.brand))
                 .frame(width: 5, height: 37)
 
-            // Teks Title & Value
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(Theme.Typography.text)

@@ -15,7 +15,6 @@ enum PlaceSearchService {
 
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = trimmed
-        // Jangkauan pencarian fallback
         request.region = MKCoordinateRegion(center: center, span: MKCoordinateSpan(latitudeDelta: 2.0, longitudeDelta: 2.0))
         
         return try await run(request: request, around: center)
@@ -30,16 +29,13 @@ enum PlaceSearchService {
         let origin = CLLocation(latitude: center.latitude, longitude: center.longitude)
 
         return response.mapItems.map { item in
-            // 🌟 PERBAIKAN 1: Gunakan `item.location` langsung, bukan `item.placemark.location`
             let location = item.location
             let coordinate = location.coordinate
             let distanceMeters = origin.distance(from: location)
             
-            // 🌟 PERBAIKAN 2: Gunakan API `address` baru iOS 26 untuk mendapatkan alamat yang sudah diformat Apple
             let subtitle = item.address?.fullAddress ?? "Location"
 
             return PlaceResult(
-                // Gunakan shortAddress sebagai cadangan jika name kosong
                 name: item.name ?? item.address?.shortAddress ?? NSLocalizedString("Unnamed", comment: ""),
                 subtitle: subtitle,
                 latitude: coordinate.latitude,

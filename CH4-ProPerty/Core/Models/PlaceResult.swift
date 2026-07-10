@@ -22,7 +22,6 @@ struct PlaceResult: Identifiable, Equatable, Codable {
 
     var distanceLabel: String? {
         guard let distanceKm else { return nil }
-        // Format: Jika di bawah 10km ada koma (1.7 km), jika di atas 10km bulat (56 km)
         return distanceKm < 10
             ? String(format: "%.1f km", distanceKm)
             : "\(Int(distanceKm.rounded())) km"

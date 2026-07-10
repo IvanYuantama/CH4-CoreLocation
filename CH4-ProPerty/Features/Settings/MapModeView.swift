@@ -9,15 +9,14 @@ import SwiftUI
 
 struct MapModeView: View {
     @Binding var mapMode: MainMapViewModel.MapMode
-    
-    // Untuk menutup sheet secara native jika diperlukan via tombol
+    @EnvironmentObject private var settings: SettingsViewModel
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             // MARK: - Header
             HStack {
-                Text("Map Mode")
+                Text(L.t(.mapMode, settings.selectedLanguage))
                     .font(Theme.Typography.title)
                     .foregroundColor(Color(.textPrimary))
                 Spacer()
@@ -30,18 +29,18 @@ struct MapModeView: View {
 
             // MARK: - Tiles Selection
             HStack(spacing: 20) {
-                modeTile(title: "Explore", imageName: "explore", isSelected: mapMode == .explore) {
+                modeTile(title: L.t(.explore, settings.selectedLanguage), imageName: "explore", isSelected: mapMode == .explore) {
                     mapMode = .explore
                 }
-                modeTile(title: "Satellite", imageName: "satellite", isSelected: mapMode == .satellite) {
+                modeTile(title: L.t(.satellite, settings.selectedLanguage), imageName: "satellite", isSelected: mapMode == .satellite) {
                     mapMode = .satellite
                 }
             }
             .padding(.horizontal, 24)
             
-            Spacer() // Mendorong konten ke atas
+            Spacer()
         }
-        .background(Color(.background).ignoresSafeArea()) // Selaras dengan AppModeView
+        .background(Color(.background).ignoresSafeArea())
     }
 
     private func modeTile(title: String, imageName: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
@@ -51,7 +50,6 @@ struct MapModeView: View {
                     .fill(Color(UIColor.secondarySystemBackground))
                     .frame(height: 90)
                     .overlay(
-                        // TODO: Ganti Image(systemName:) dengan asset gambar (Image("...")) nanti
                         Image(imageName)
                             .resizable()
                     )
@@ -70,5 +68,6 @@ struct MapModeView: View {
 }
 
 #Preview {
-MapModeView(mapMode: .constant(.explore))
+    MapModeView(mapMode: .constant(.explore))
+        .environmentObject(SettingsViewModel())
 }

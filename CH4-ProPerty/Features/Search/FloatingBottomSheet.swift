@@ -43,7 +43,7 @@ struct FloatingBottomSheet<Content: View>: View {
             )
             .background(Color(.cardBackground))
             .clipShape(RoundedRectangle(cornerRadius: 20))
-            .shadow(radius: 20)
+            .shadow(radius: 25)
             .frame(maxWidth: .infinity,
                    maxHeight: .infinity,
                    alignment: .bottom)
@@ -102,10 +102,6 @@ struct FloatingBottomSheet<Content: View>: View {
     }}
 
 // MARK: - Search Sheet Implementation (port dari SearchSheet.swift)
-// Nge-reuse SearchViewModel, PlaceResult, SearchResultRow, CustomPinMarker,
-// Theme.Typography, dan Color(.xxx) extension yang udah ada di SearchSheet.swift
-// -- tidak didefinisikan ulang di sini karena satu module/target yang sama.
-
 struct FloatingSearchSheet: View {
     let center: CLLocationCoordinate2D
     @Binding var state: FloatingSheetState
@@ -151,7 +147,6 @@ struct FloatingSearchSheet: View {
         }
         .onAppear { vm.setCenter(center) }
         .onChange(of: center) { _, newCenter in
-            // Map di-geser -> update origin buat re-sort jarak/relevansi hasil pencarian.
             vm.setCenter(newCenter)
         }
         .onChange(of: isFieldFocused) { _, focused in
@@ -195,7 +190,7 @@ struct FloatingSearchSheet: View {
         .padding(.horizontal, 16)
         .background(Color(.cardBackground))
         .clipShape(Capsule())
-        .shadow(color: .black.opacity(0.12), radius: 6, y: 3)
+        .shadow(color: .black.opacity(0.3), radius: 6, y: 3)
         .padding(.horizontal, state == .expanded ? 16 : 0)
         .padding(.bottom, 10)
     }

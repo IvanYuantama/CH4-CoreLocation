@@ -12,15 +12,15 @@ import Combine
 @MainActor
 final class SearchCompleter: NSObject, ObservableObject {
     @Published var suggestions: [MKLocalSearchCompletion] = []
-
+    
     private let completer = MKLocalSearchCompleter()
-
+    
     override init() {
         super.init()
         completer.delegate = self
         completer.resultTypes = [.address, .pointOfInterest, .query]
     }
-
+    
     func update(query: String, around center: CLLocationCoordinate2D) {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
@@ -40,7 +40,7 @@ extension SearchCompleter: MKLocalSearchCompleterDelegate {
         let results = completer.results
         Task { @MainActor in self.suggestions = results }
     }
-
+    
     nonisolated func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
         Task { @MainActor in self.suggestions = [] }
     }

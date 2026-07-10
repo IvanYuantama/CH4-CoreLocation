@@ -33,7 +33,7 @@ struct MapControlBar: View {
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(Color(.textSecondary))
-                    Text("Cari lokasi...") // Sesuaikan dengan Localization key kamu
+                    Text("Cari lokasi...")
                         .foregroundColor(Color(.textSecondary))
                         .font(Theme.Typography.section)
                     Spacer()
@@ -60,6 +60,6 @@ struct MapControlBar: View {
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 20)
-        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+        .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
     }
 }

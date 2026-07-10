@@ -5,11 +5,6 @@
 //  Created by Andhika Satria on 08/07/26.
 //
 
-//  Tabel string dwibahasa (EN / ID) dengan pergantian bahasa live in-app.
-//  View apa pun yang mengamati @AppStorage("appLanguage") — langsung atau via
-//  SettingsViewModel.selectedLanguage — otomatis re-render saat bahasa diganti.
-//
-
 import Foundation
 
 enum AppLanguage: String, CaseIterable {
@@ -18,6 +13,7 @@ enum AppLanguage: String, CaseIterable {
 }
 
 enum LocKey: String {
+    case offlineBanner
     // Settings — headers
     case languagePreference, appMode, dataPreferences
     // App mode
@@ -116,7 +112,7 @@ enum L {
 
         .searchLocation: ["en": "Search a location", "id": "Cari lokasi"],
         .mapMode:        ["en": "Map Mode",          "id": "Mode Peta"],
-        .explore:        ["en": "Explore",           "id": "Jelajah"],
+        .explore:        ["en": "Explore",           "id": "Eksplorasi"],
         .satellite:      ["en": "Satellite",         "id": "Satelit"],
 
         .splashTagline: ["en": "Consider your property like a professional",
@@ -145,6 +141,8 @@ enum L {
         .cardCellularUpload:    ["en": "Cellular (Upload)",   "id": "Seluler (Unggah)"],
 
         .perYear: ["en": "/ yr", "id": "/ thn"],
+        .offlineBanner: ["en": "Showing sample data (Offline)",
+                         "id": "Menampilkan data sampel (Offline)"],
     ]
 
     // MARK: - Tabel NILAI metrik (kunci di-lowercase)

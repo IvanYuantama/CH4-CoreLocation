@@ -13,12 +13,12 @@
 import Foundation
 
 enum PlaceOverviewComposer {
-    static func summary(for intel: PlaceIntel, indonesian: Bool) -> String {
-        indonesian ? indonesianSummary(intel) : englishSummary(intel)
+    static func summary(locationName: String, for intel: PlaceIntel, indonesian: Bool) -> String {
+        indonesian ? indonesianSummary(locationName, intel) : englishSummary(locationName, intel)
     }
 
     // MARK: - English
-    private static func englishSummary(_ i: PlaceIntel) -> String {
+    private static func englishSummary(_ locationName: String, _ i: PlaceIntel) -> String {
         let loc = Locale(identifier: "en_US")
         var parts: [String] = []
 
@@ -26,7 +26,7 @@ enum PlaceOverviewComposer {
         if i.temperatureLevel != "Unknown" { env.append("a \(i.temperatureLevel.lowercased()) average temperature") }
         if i.airQualityLevel  != "Unknown" { env.append("\(i.airQualityLevel.lowercased()) air quality") }
         if i.floodRisk        != "Unknown" { env.append("\(i.floodRisk.lowercased()) flood risk") }
-        if !env.isEmpty { parts.append("This area has " + joinNatural(env, "and") + ".") }
+        if !env.isEmpty { parts.append("\(locationName) has " + joinNatural(env, "and") + ".") }
 
         var access: [String] = []
         if i.greenSpaces != "Unknown" { access.append("\(i.greenSpaces.lowercased()) green space") }
@@ -46,12 +46,12 @@ enum PlaceOverviewComposer {
         }
 
         return parts.isEmpty
-            ? "Detailed environmental data for this area is not available yet."
+            ? "Detailed environmental data for \(locationName) is not available yet."
             : parts.joined(separator: " ")
     }
 
     // MARK: - Bahasa Indonesia
-    private static func indonesianSummary(_ i: PlaceIntel) -> String {
+    private static func indonesianSummary(_ locationName: String, _ i: PlaceIntel) -> String {
         let loc = Locale(identifier: "id_ID")
         func v(_ s: String) -> String { L.value(s, "id").lowercased() }
         var parts: [String] = []
@@ -60,7 +60,7 @@ enum PlaceOverviewComposer {
         if i.temperatureLevel != "Unknown" { env.append("suhu rata-rata \(v(i.temperatureLevel))") }
         if i.airQualityLevel  != "Unknown" { env.append("kualitas udara \(v(i.airQualityLevel))") }
         if i.floodRisk        != "Unknown" { env.append("risiko banjir \(v(i.floodRisk))") }
-        if !env.isEmpty { parts.append("Area ini memiliki " + joinNatural(env, "dan") + ".") }
+        if !env.isEmpty { parts.append("\(locationName) memiliki " + joinNatural(env, "dan") + ".") }
 
         var access: [String] = []
         if i.greenSpaces != "Unknown" { access.append("ruang hijau \(v(i.greenSpaces))") }
@@ -80,7 +80,7 @@ enum PlaceOverviewComposer {
         }
 
         return parts.isEmpty
-            ? "Data lingkungan detail untuk area ini belum tersedia."
+            ? "Data lingkungan detail untuk \(locationName) belum tersedia."
             : parts.joined(separator: " ")
     }
 

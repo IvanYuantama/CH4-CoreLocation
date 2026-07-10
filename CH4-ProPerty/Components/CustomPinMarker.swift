@@ -11,7 +11,6 @@ struct CustomPinMarker: View {
     var body: some View {
         VStack(spacing: 0) {
             Circle()
-                // Menggunakan warna pin merah yang sudah ada di Theme sebelumnya
                 .fill(Color(.markerHead))
                 .frame(width: 19, height: 19)
             
@@ -26,7 +25,6 @@ struct CustomPinMarkerMini: View {
     var body: some View {
         VStack(spacing: 0) {
             Circle()
-                // Menggunakan warna pin merah yang sudah ada di Theme sebelumnya
                 .fill(Color(.markerHead))
                 .frame(width: 10, height: 10)
             
