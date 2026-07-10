@@ -117,7 +117,7 @@ We not use GeoToolBox anymore because MapKit already give more detail data for p
 
 All four frameworks are genuinely necessary and work together in sequence. CoreLocation provides the coordinate and realtime GPS location, MapKit consumes that coordinate to render the map and display the surrounding area, FoundationModels consume detail risk property data from API and change it to 1 paragraph summary, WeatherKit consumes that same coordinate to fetch realtime data (temperature, humidity, etc) that enrich the property overview with live conditions rather than static data alone. Removing any one of them degrades the core use case: without CoreLocation there is no coordinate, without MapKit there is no map displaying, without FoundationModels there is no summary overview that make user more easier to read the risk data, and without WeatherKit the overview doesnt have real environmental data.
 
-The challenge response reflects this: _Create an app that utilizes Location Manager for location tracking, Reverse Geocoding for address resolution, Coordinate Regions for map navigation, and WeatherService to to fetch and present environmental conditions data for any selected property._
+The challenge response reflects this: _Create an app that utilizes Location Manager for location tracking, Reverse Geocoding for address resolution, Coordinate Regions for map navigation, Foundation Models for give summary of property risk data and WeatherService to to fetch and present environmental conditions data for any selected property._
 
 ### About Accessibility and Localization
 
